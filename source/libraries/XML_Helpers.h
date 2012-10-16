@@ -2,10 +2,8 @@
 #define _XML_HELPERS_H__
 
 
-//#include "SDL_Helpers.h"
 #include "tinyxml.h"
 #include <string>
-#include <list>
 
 bool toBool(const std::string& str);
 int toInt(const std::string& str);

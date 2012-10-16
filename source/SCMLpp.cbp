@@ -94,8 +94,6 @@
 		<Unit filename="SDL_gpu_renderer.cpp" />
 		<Unit filename="libraries/XML_Helpers.cpp" />
 		<Unit filename="libraries/XML_Helpers.h" />
-		<Unit filename="libraries/goodio.cpp" />
-		<Unit filename="libraries/goodio.h" />
 		<Unit filename="libraries/tinystr.cpp" />
 		<Unit filename="libraries/tinystr.h" />
 		<Unit filename="libraries/tinyxml.cpp" />
