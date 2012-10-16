@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="SCMLpp-test" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Linux64 - Debug">
+				<Option output="../SCMLpp-test" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="`sdl-config --cflags`" />
+					<Add directory="../externals/include" />
+					<Add directory="libraries" />
+				</Compiler>
+				<Linker>
+					<Add option="`sdl-config --libs`" />
+					<Add library="SDL_gpu" />
+					<Add library="GL" />
+					<Add directory="../externals/lib/linux64" />
+				</Linker>
+			</Target>
+			<Target title="Linux64 - Release">
+				<Option output="../SCML-test" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="`sdl-config --cflags`" />
+					<Add directory="../externals/include" />
+					<Add directory="libraries" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`sdl-config --libs`" />
+					<Add library="SDL_gpu" />
+					<Add library="GL" />
+					<Add directory="../externals/lib/linux64" />
+				</Linker>
+			</Target>
+			<Target title="Linux32 - Debug">
+				<Option output="../SCMLpp-test" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="`sdl-config --cflags`" />
+					<Add directory="../externals/include" />
+					<Add directory="libraries" />
+				</Compiler>
+				<Linker>
+					<Add option="`sdl-config --libs`" />
+					<Add library="SDL_gpu" />
+					<Add library="GL" />
+					<Add directory="../externals/lib/linux32" />
+				</Linker>
+			</Target>
+			<Target title="Linux32 - Release">
+				<Option output="../SCML-test" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="`sdl-config --cflags`" />
+					<Add directory="../externals/include" />
+					<Add directory="libraries" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`sdl-config --libs`" />
+					<Add library="SDL_gpu" />
+					<Add library="GL" />
+					<Add directory="../externals/lib/linux32" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="SCMLpp.cpp" />
+		<Unit filename="SCMLpp.h" />
+		<Unit filename="SDL_gpu_renderer.cpp" />
+		<Unit filename="libraries/SDL_Helpers.cpp" />
+		<Unit filename="libraries/SDL_Helpers.h" />
+		<Unit filename="libraries/XML_Helpers.cpp" />
+		<Unit filename="libraries/XML_Helpers.h" />
+		<Unit filename="libraries/goodio.cpp" />
+		<Unit filename="libraries/goodio.h" />
+		<Unit filename="libraries/tinystr.cpp" />
+		<Unit filename="libraries/tinystr.h" />
+		<Unit filename="libraries/tinyxml.cpp" />
+		<Unit filename="libraries/tinyxml.h" />
+		<Unit filename="libraries/tinyxmlerror.cpp" />
+		<Unit filename="libraries/tinyxmlparser.cpp" />
+		<Unit filename="main.cpp" />
+		<Unit filename="renderer.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
