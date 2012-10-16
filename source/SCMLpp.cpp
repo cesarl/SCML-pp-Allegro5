@@ -106,6 +106,10 @@ bool Data::load(TiXmlElement* elem)
     generator_version = xmlGetStringAttr(elem, "generator_version", "(1.0)");
     pixel_art_mode = xmlGetBoolAttr(elem, "pixel_art_mode", false);
     
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+        meta_data.load(meta_data_child);
+    
     for(TiXmlElement* child = elem->FirstChildElement("folder"); child != NULL; child = child->NextSiblingElement("folder"))
     {
         Folder* folder = new Folder;
@@ -185,39 +189,44 @@ bool Data::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::log() const
+void Data::log(int recursive_depth) const
 {
     SCML::log("scml_version=%s\n", scml_version.c_str());
     SCML::log("generator=%s\n", generator.c_str());
     SCML::log("generator_version=%s\n", generator_version.c_str());
     SCML::log("pixel_art_mode=%s\n", toString(pixel_art_mode).c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
+    meta_data.log(recursive_depth - 1);
+    
     for(map<int, Folder*>::const_iterator e = folders.begin(); e != folders.end(); e++)
     {
         SCML::log("Folder:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<int, Atlas*>::const_iterator e = atlases.begin(); e != atlases.end(); e++)
     {
         SCML::log("Atlas:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<int, Entity*>::const_iterator e = entities.begin(); e != entities.end(); e++)
     {
         SCML::log("Entity:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<int, Character_Map*>::const_iterator e = character_maps.begin(); e != character_maps.end(); e++)
     {
         SCML::log("Character_Map:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     SCML::log("Document_Info:\n");
-    document_info.log();
+    document_info.log(recursive_depth - 1);
 }
 
 void Data::clear()
@@ -226,6 +235,8 @@ void Data::clear()
     generator = "(Spriter)";
     generator_version = "(1.0)";
     pixel_art_mode = false;
+    
+    meta_data.clear();
     
     for(map<int, Folder*>::iterator e = folders.begin(); e != folders.end(); e++)
     {
@@ -307,18 +318,21 @@ bool Data::Meta_Data::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Meta_Data::log() const
+void Data::Meta_Data::log(int recursive_depth) const
 {
+    if(recursive_depth == 0)
+        return;
+    
     for(map<std::string, Variable*>::const_iterator e = variables.begin(); e != variables.end(); e++)
     {
         SCML::log("Variable:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<std::string, Tag*>::const_iterator e = tags.begin(); e != tags.end(); e++)
     {
         SCML::log("Tag:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -367,7 +381,7 @@ bool Data::Meta_Data::Variable::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Meta_Data::Variable::log() const
+void Data::Meta_Data::Variable::log(int recursive_depth) const
 {
     SCML::log("name=%s\n", name.c_str());
     SCML::log("type=%s\n", type.c_str());
@@ -406,7 +420,7 @@ bool Data::Meta_Data::Tag::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Meta_Data::Tag::log() const
+void Data::Meta_Data::Tag::log(int recursive_depth) const
 {
     SCML::log("name=%s\n", name.c_str());
 }
@@ -456,15 +470,18 @@ bool Data::Folder::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Folder::log() const
+void Data::Folder::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     for(map<int, File*>::const_iterator e = files.begin(); e != files.end(); e++)
     {
         SCML::log("File:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -514,7 +531,7 @@ bool Data::Folder::File::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Folder::File::log() const
+void Data::Folder::File::log(int recursive_depth) const
 {
     SCML::log("type=%s\n", type.c_str());
     SCML::log("id=%d\n", id);
@@ -589,16 +606,19 @@ bool Data::Atlas::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Atlas::log() const
+void Data::Atlas::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("data_path=%s\n", data_path.c_str());
     SCML::log("image_path=%s\n", image_path.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     for(map<int, Folder*>::const_iterator e = folders.begin(); e != folders.end(); e++)
     {
         SCML::log("Folder:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -656,15 +676,18 @@ bool Data::Atlas::Folder::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Atlas::Folder::log() const
+void Data::Atlas::Folder::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     for(map<int, Image*>::const_iterator e = images.begin(); e != images.end(); e++)
     {
         SCML::log("Image:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -703,7 +726,7 @@ bool Data::Atlas::Folder::Image::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Atlas::Folder::Image::log() const
+void Data::Atlas::Folder::Image::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("full_path=%s\n", full_path.c_str());
@@ -759,15 +782,18 @@ bool Data::Entity::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::log() const
+void Data::Entity::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     for(map<int, Animation*>::const_iterator e = animations.begin(); e != animations.end(); e++)
     {
         SCML::log("Animation:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -838,7 +864,7 @@ bool Data::Entity::Animation::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::log() const
+void Data::Entity::Animation::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
@@ -846,12 +872,15 @@ void Data::Entity::Animation::log() const
     SCML::log("looping=%s\n", looping.c_str());
     SCML::log("loop_to=%d\n", loop_to);
     
-    mainline.log();
+    if(recursive_depth == 0)
+        return;
+    
+    mainline.log(recursive_depth - 1);
     
     for(map<int, Timeline*>::const_iterator e = timelines.begin(); e != timelines.end(); e++)
     {
         SCML::log("Timeline:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -912,12 +941,15 @@ bool Data::Entity::Animation::Mainline::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Mainline::log() const
+void Data::Entity::Animation::Mainline::log(int recursive_depth) const
 {
+    if(recursive_depth == 0)
+        return;
+        
     for(map<int, Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
     {
         SCML::log("Key:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -954,7 +986,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
     time = xmlGetIntAttr(elem, "time", 0);
     
     TiXmlElement* hierarchy_child = elem->FirstChildElement("hierarchy");
-    if(hierarchy_child == NULL || !hierarchy.load(hierarchy_child))
+    if(hierarchy_child != NULL && !hierarchy.load(hierarchy_child))
     {
         SCML::log("SCML::Data::Entity::Animation::Mainline::Key failed to load the hierarchy.\n");
     }
@@ -998,23 +1030,26 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::log() const
+void Data::Entity::Animation::Mainline::Key::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("time=%d\n", time);
     
-    hierarchy.log();
+    if(recursive_depth == 0)
+        return;
+    
+    hierarchy.log(recursive_depth - 1);
     
     for(map<int, Object*>::const_iterator e = objects.begin(); e != objects.end(); e++)
     {
         SCML::log("Object:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<int, Object_Ref*>::const_iterator e = object_refs.begin(); e != object_refs.end(); e++)
     {
         SCML::log("Object_Ref:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -1095,18 +1130,21 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::log() const
+void Data::Entity::Animation::Mainline::Key::Hierarchy::log(int recursive_depth) const
 {
+    if(recursive_depth == 0)
+        return;
+        
     for(map<int, Bone*>::const_iterator e = bones.begin(); e != bones.end(); e++)
     {
         SCML::log("Bone:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
     for(map<int, Bone_Ref*>::const_iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
     {
         SCML::log("Bone_Ref:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -1159,7 +1197,7 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::load(TiXmlElement*
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log() const
+void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1217,7 +1255,7 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::load(TiXmlElem
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::log() const
+void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1307,7 +1345,7 @@ bool Data::Entity::Animation::Mainline::Key::Object::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Object::log() const
+void Data::Entity::Animation::Mainline::Key::Object::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1432,7 +1470,7 @@ bool Data::Entity::Animation::Mainline::Key::Object_Ref::load(TiXmlElement* elem
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Object_Ref::log() const
+void Data::Entity::Animation::Mainline::Key::Object_Ref::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1508,7 +1546,7 @@ bool Data::Entity::Animation::Timeline::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::log() const
+void Data::Entity::Animation::Timeline::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
@@ -1516,10 +1554,13 @@ void Data::Entity::Animation::Timeline::log() const
     SCML::log("variable_type=%s\n", variable_type.c_str());
     SCML::log("usage=%s\n", usage.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     for(map<int, Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
     {
         SCML::log("Key:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -1572,14 +1613,14 @@ bool Data::Entity::Animation::Timeline::Key::load(TiXmlElement* elem)
     has_object = true;
     
     child = elem->FirstChildElement("bone");
-    if(child == NULL || !bone.load(child))
+    if(child != NULL && !bone.load(child))
     {
         SCML::log("SCML::Data::Entity::Animation::Timeline::Key failed to load a bone.\n");
         has_object = false;
     }
         
     child = elem->FirstChildElement("object");
-    if(child == NULL || !meta_data.load(child))
+    if(child == NULL && !meta_data.load(child))
     {
         SCML::log("SCML::Data::Entity::Animation::Timeline::Key failed to load an object.\n");
         has_object = true;
@@ -1588,7 +1629,7 @@ bool Data::Entity::Animation::Timeline::Key::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::log() const
+void Data::Entity::Animation::Timeline::Key::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("time=%d\n", time);
@@ -1597,17 +1638,20 @@ void Data::Entity::Animation::Timeline::Key::log() const
     SCML::log("c2=%f\n", c2);
     SCML::log("spin=%d\n", spin);
     
+    if(recursive_depth == 0)
+        return;
+    
     SCML::log("Meta_Data:\n");
-    meta_data.log();
+    meta_data.log(recursive_depth - 1);
     if(has_object)
     {
         SCML::log("Object:\n");
-        object.log();
+        object.log(recursive_depth - 1);
     }
     else
     {
         SCML::log("Bone:\n");
-        bone.log();
+        bone.log(recursive_depth - 1);
     }
     
 }
@@ -1664,12 +1708,15 @@ bool Data::Entity::Animation::Timeline::Key::Meta_Data::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::log() const
+void Data::Entity::Animation::Timeline::Key::Meta_Data::log(int recursive_depth) const
 {
+    if(recursive_depth == 0)
+        return;
+        
     for(map<std::string, Variable*>::const_iterator e = variables.begin(); e != variables.end(); e++)
     {
         SCML::log("Variable:\n");
-        e->second->log();
+        e->second->log(recursive_depth - 1);
     }
     
 }
@@ -1717,7 +1764,7 @@ bool Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::load(TiXmlElem
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::log() const
+void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::log(int recursive_depth) const
 {
     SCML::log("type=%s\n", type.c_str());
     if(type == "string")
@@ -1777,7 +1824,7 @@ bool Data::Entity::Animation::Timeline::Key::Bone::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Bone::log() const
+void Data::Entity::Animation::Timeline::Key::Bone::log(int recursive_depth) const
 {
     SCML::log("x=%f\n", x);
     SCML::log("y=%f\n", y);
@@ -1871,7 +1918,7 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Object::log() const
+void Data::Entity::Animation::Timeline::Key::Object::log(int recursive_depth) const
 {
     //SCML::log("object_type=%s\n", object_type.c_str());
     SCML::log("atlas=%d\n", atlas);
@@ -1986,13 +2033,16 @@ bool Data::Character_Map::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Character_Map::log() const
+void Data::Character_Map::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("name=%s\n", name.c_str());
     
+    if(recursive_depth == 0)
+        return;
+    
     SCML::log("Map:\n");
-    map.log();
+    map.log(recursive_depth - 1);
     
 }
 
@@ -2032,7 +2082,7 @@ bool Data::Character_Map::Map::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Character_Map::Map::log() const
+void Data::Character_Map::Map::log(int recursive_depth) const
 {
     SCML::log("atlas=%d\n", atlas);
     SCML::log("folder=%d\n", folder);
@@ -2083,7 +2133,7 @@ bool Data::Document_Info::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Document_Info::log() const
+void Data::Document_Info::log(int recursive_depth) const
 {
     SCML::log("author=%s\n", author.c_str());
     SCML::log("copyright=%s\n", copyright.c_str());

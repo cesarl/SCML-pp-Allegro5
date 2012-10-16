@@ -18,8 +18,6 @@ class Data
     std::string generator_version;
     bool pixel_art_mode;
     
-    class Meta_Data;
-    std::list<Meta_Data*> meta_data;
     class Folder;
     std::map<int, Folder*> folders;
     class Atlas;
@@ -39,7 +37,7 @@ class Data
     bool load(const char* file);
     bool load(TiXmlElement* elem);
     Data& clone(const Data& copy, bool skip_base = false);
-    void log() const;
+    void log(int recursive_depth = 0) const;
     void clear();
     
     
@@ -57,7 +55,7 @@ class Data
         Meta_Data(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
         class Variable
@@ -75,7 +73,7 @@ class Data
             Variable(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
         };
         
@@ -89,10 +87,12 @@ class Data
             Tag(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
         };
     };
+    
+    Meta_Data meta_data;
 
     class Folder
     {
@@ -109,7 +109,7 @@ class Data
         Folder(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
         class File
@@ -134,7 +134,7 @@ class Data
             File(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
             
         };
@@ -154,7 +154,7 @@ class Data
         Atlas(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
         class Folder
@@ -171,7 +171,7 @@ class Data
             Folder(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
             
             
@@ -186,7 +186,7 @@ class Data
                 Image(TiXmlElement* elem);
                 
                 bool load(TiXmlElement* elem);
-                void log() const;
+                void log(int recursive_depth = 0) const;
                 void clear();
                 
             };
@@ -207,7 +207,7 @@ class Data
         Entity(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
         // TODO: Meta_Data goes here, but what does it contain?
@@ -231,7 +231,7 @@ class Data
                 Mainline(TiXmlElement* elem);
                 
                 bool load(TiXmlElement* elem);
-                void log() const;
+                void log(int recursive_depth = 0) const;
                 void clear();
                 
                 class Key;
@@ -248,7 +248,7 @@ class Data
                     Key(TiXmlElement* elem);
                     
                     bool load(TiXmlElement* elem);
-                    void log() const;
+                    void log(int recursive_depth = 0) const;
                     void clear();
                     
                     class Object;
@@ -266,7 +266,7 @@ class Data
                         Hierarchy(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                         
                         class Bone;
@@ -296,7 +296,7 @@ class Data
                             Bone(TiXmlElement* elem);
                             
                             bool load(TiXmlElement* elem);
-                            void log() const;
+                            void log(int recursive_depth = 0) const;
                             void clear();
                             
                         };
@@ -314,7 +314,7 @@ class Data
                             Bone_Ref(TiXmlElement* elem);
                             
                             bool load(TiXmlElement* elem);
-                            void log() const;
+                            void log(int recursive_depth = 0) const;
                             void clear();
                         };
                     };
@@ -369,7 +369,7 @@ class Data
                         Object(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                         
                     };
@@ -388,7 +388,7 @@ class Data
                         Object_Ref(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                     };
                 };
@@ -404,7 +404,7 @@ class Data
             Animation(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
             
             // TODO: Meta_Data goes here, but what does it contain?
@@ -424,7 +424,7 @@ class Data
                 Timeline(TiXmlElement* elem);
                 
                 bool load(TiXmlElement* elem);
-                void log() const;
+                void log(int recursive_depth = 0) const;
                 void clear();
                 
                 class Key;
@@ -447,7 +447,7 @@ class Data
                     Key(TiXmlElement* elem);
                     
                     bool load(TiXmlElement* elem);
-                    void log() const;
+                    void log(int recursive_depth = 0) const;
                     void clear();
                     
                     class Meta_Data
@@ -461,7 +461,7 @@ class Data
                         Meta_Data(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                         
                         class Variable
@@ -481,7 +481,7 @@ class Data
                             Variable(TiXmlElement* elem);
                             
                             bool load(TiXmlElement* elem);
-                            void log() const;
+                            void log(int recursive_depth = 0) const;
                             void clear();
                             
                         };
@@ -509,7 +509,7 @@ class Data
                         Bone(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                     };
                     
@@ -558,7 +558,7 @@ class Data
                         Object(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
-                        void log() const;
+                        void log(int recursive_depth = 0) const;
                         void clear();
                         
                         // TODO: Meta_Data goes here, but what does it contain?
@@ -581,7 +581,7 @@ class Data
         Character_Map(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
         class Map
@@ -599,7 +599,7 @@ class Data
             Map(TiXmlElement* elem);
             
             bool load(TiXmlElement* elem);
-            void log() const;
+            void log(int recursive_depth = 0) const;
             void clear();
         };
         
@@ -621,7 +621,7 @@ class Data
         Document_Info(TiXmlElement* elem);
         
         bool load(TiXmlElement* elem);
-        void log() const;
+        void log(int recursive_depth = 0) const;
         void clear();
         
     };

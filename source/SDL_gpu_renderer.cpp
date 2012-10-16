@@ -31,8 +31,6 @@ void quit()
 
 void main_loop(SCML::Data* data)
 {
-    data->log();
-    
     bool done = false;
     SDL_Event event;
     
