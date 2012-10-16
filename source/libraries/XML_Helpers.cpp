@@ -5,57 +5,97 @@ using namespace std;
 
 
 
-
-
-list<string> explode(const string& str, char delimiter)
+std::string toLower(const std::string& str)
 {
-    list<string> result;
-
-    size_t oldPos = 0;
-    size_t pos = str.find_first_of(delimiter);
-    while(pos != string::npos)
+    std::string result = str;
+    for(unsigned int i = 0; i < result.size(); i++)
     {
-        result.push_back(str.substr(oldPos, pos - oldPos));
-        oldPos = pos+1;
-        pos = str.find_first_of(delimiter, oldPos);
+        result[i] = tolower(result[i]);
     }
-
-    result.push_back(str.substr(oldPos, string::npos));
-
     return result;
 }
 
 
-
-
-
-
-vector<std::string> ioExplodev(const std::string& str, char delimiter)
+bool toBool(const std::string& str)
 {
-    vector<string> result;
+    if(toLower(str) == "true")
+        return true;
+    if(toLower(str) == "false")
+        return false;
+    return atoi(str.c_str());
+}
 
-    size_t oldPos = 0;
-    size_t pos = str.find_first_of(delimiter);
-    while(pos != string::npos)
+int toInt(const std::string& str)
+{
+    return atoi(str.c_str());
+}
+
+float toFloat(const std::string& str)
+{
+    return atof(str.c_str());
+}
+
+
+
+std::string toString(bool b)
+{
+    return (b? "true" : "false");
+}
+
+std::string toString(int n)
+{
+    char buf[20];
+    sprintf(buf, "%d", n);
+    return buf;
+}
+
+char* stripTrailingDecimalZeros(char* buf)
+{
+    if(buf == NULL)
+        return NULL;
+    
+    char* c = buf;
+    
+    // See if it has a decimal
+    bool hasDecimal = false;
+    while(*c != '\0')
     {
-        result.push_back(str.substr(oldPos, pos - oldPos));
-        oldPos = pos+1;
-        pos = str.find_first_of(delimiter, oldPos);
+        if(*c == '.')
+            hasDecimal = true;
+        c++;
     }
-
-    result.push_back(str.substr(oldPos, string::npos));
-
-    // Test this:
-    /*unsigned int pos;
-    do
+    
+    // If there is a decimal part, remove all the trailing zeros and the decimal point if we reach it.
+    if(hasDecimal)
     {
-        pos = str.find_first_of(delimiter, oldPos);
-        result.push_back(str.substr(oldPos, pos - oldPos));
-        oldPos = pos+1;
+        while(c != buf)
+        {
+            c--;
+            if(*c == '0')
+                *c = '\0';
+            else
+            {
+                if(*c == '.')
+                    *c = '\0';
+                break;
+            }
+        }
     }
-    while(pos != string::npos);*/
+    
+    return buf;
+}
 
-    return result;
+std::string toString(float f, int precision)
+{
+    char buf[20];
+    if(precision >= 0)
+        snprintf(buf, 20, "%.*f", precision, f);
+    else
+    {
+        snprintf(buf, 20, "%f", f);
+        stripTrailingDecimalZeros(buf);
+    }
+    return buf;
 }
 
 
@@ -149,85 +189,6 @@ float xmlGetFloatAttr(TiXmlElement* elem, const string& attribute, float default
     if(attr == NULL)
         return defaultValue;
     return toFloat(attr);
-}
-
-
-Point xmlGetPointAttr(TiXmlElement* elem, const string& attribute)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-    {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
-        return Point(0, 0);
-    }
-    return toPoint(attr);
-}
-
-Point xmlGetPointAttr(TiXmlElement* elem, const string& attribute, const Point& defaultValue)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-        return defaultValue;
-    return toPoint(attr);
-}
-
-
-Pointf xmlGetPointfAttr(TiXmlElement* elem, const string& attribute)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-    {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
-        return Pointf(0, 0);
-    }
-    return toPointf(attr);
-}
-
-Pointf xmlGetPointfAttr(TiXmlElement* elem, const string& attribute, const Pointf& defaultValue)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-        return defaultValue;
-    return toPointf(attr);
-}
-
-
-Color xmlGetColorAttr(TiXmlElement* elem, const string& attribute)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-    {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
-        return Color(0,0,0);
-    }
-    return toColor(attr);
-}
-
-Color xmlGetColorAttr(TiXmlElement* elem, const string& attribute, const Color& defaultValue)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-        return defaultValue;
-    return toColor(attr);
-}
-
-Rect xmlGetRectAttr(TiXmlElement* elem, const string& attribute)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-    {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
-        return Rect(0, 0, 0, 0);
-    }
-    return toRect(attr);
-}
-
-Rect xmlGetRectAttr(TiXmlElement* elem, const string& attribute, const Rect& defaultValue)
-{
-    const char* attr = elem->Attribute(attribute.c_str());
-    if(attr == NULL)
-        return defaultValue;
-    return toRect(attr);
 }
 
 
