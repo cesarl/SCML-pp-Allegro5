@@ -1348,11 +1348,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Object::Object()
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(0.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
+    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
 {}
 
 Data::Entity::Animation::Mainline::Key::Object::Object(TiXmlElement* elem)
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(0.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
+    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
 {
     load(elem);
 }
@@ -1370,11 +1370,11 @@ bool Data::Entity::Animation::Mainline::Key::Object::load(TiXmlElement* elem)
     x = xmlGetFloatAttr(elem, "x", 0.0f);
     y = xmlGetFloatAttr(elem, "y", 0.0f);
     pivot_x = xmlGetFloatAttr(elem, "pivot_x", 0.0f);
-    pivot_y = xmlGetFloatAttr(elem, "pivot_y", 0.0f);
-    pixel_art_mode_x = xmlGetIntAttr(elem, "x", 0.0f);
-    pixel_art_mode_y = xmlGetIntAttr(elem, "y", 0.0f);
-    pixel_art_mode_pivot_x = xmlGetIntAttr(elem, "pivot_x", 0.0f);
-    pixel_art_mode_pivot_y = xmlGetIntAttr(elem, "pivot_y", 0.0f);
+    pivot_y = xmlGetFloatAttr(elem, "pivot_y", 1.0f);
+    pixel_art_mode_x = xmlGetIntAttr(elem, "x", 0);
+    pixel_art_mode_y = xmlGetIntAttr(elem, "y", 0);
+    pixel_art_mode_pivot_x = xmlGetIntAttr(elem, "pivot_x", 0);
+    pixel_art_mode_pivot_y = xmlGetIntAttr(elem, "pivot_y", 0);
     angle = xmlGetFloatAttr(elem, "angle", 0.0f);
     w = xmlGetFloatAttr(elem, "w", 0.0f);
     h = xmlGetFloatAttr(elem, "h", 0.0f);
@@ -1927,11 +1927,11 @@ void Data::Entity::Animation::Timeline::Key::Bone::clear()
 
 
 Data::Entity::Animation::Timeline::Key::Object::Object()
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(0.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
 {}
 
 Data::Entity::Animation::Timeline::Key::Object::Object(TiXmlElement* elem)
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(0.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
 {
     load(elem);
 }
@@ -1946,7 +1946,7 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
     x = xmlGetFloatAttr(elem, "x", 0.0f);
     y = xmlGetFloatAttr(elem, "y", 0.0f);
     pivot_x = xmlGetFloatAttr(elem, "pivot_x", 0.0f);
-    pivot_y = xmlGetFloatAttr(elem, "pivot_y", 0.0f);
+    pivot_y = xmlGetFloatAttr(elem, "pivot_y", 1.0f);
     angle = xmlGetFloatAttr(elem, "angle", 0.0f);
     w = xmlGetFloatAttr(elem, "w", 0.0f);
     h = xmlGetFloatAttr(elem, "h", 0.0f);

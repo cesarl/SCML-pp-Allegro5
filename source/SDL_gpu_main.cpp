@@ -18,8 +18,10 @@ void main_loop(SCML::Data* data)
     
     FileSystem fs;
     fs.load(data);
-    printf("Loaded %d images.\n", fs.images.size());
+    printf("Loaded %zu images.\n", fs.images.size());
     
+    float x = 400.0f;
+    float y = 300.0f;
     
     bool done = false;
     SDL_Event event;
@@ -48,6 +50,15 @@ void main_loop(SCML::Data* data)
             }
         }
         
+        if(keystates[SDLK_UP])
+            y -= 100*dt_ms/1000.0f;
+        else if(keystates[SDLK_DOWN])
+            y += 100*dt_ms/1000.0f;
+        if(keystates[SDLK_LEFT])
+            x -= 100*dt_ms/1000.0f;
+        else if(keystates[SDLK_RIGHT])
+            x += 100*dt_ms/1000.0f;
+        
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
             (*e)->update(data, dt_ms);
@@ -58,7 +69,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(data, &fs, screen, 400, 300);
+            (*e)->draw(data, &fs, screen, x, y);
         }
         
         

@@ -146,6 +146,7 @@ void Entity::update(SCML::Data* data, int dt_ms)
     }
 }
 
+// TODO: Add scaling and rotation to this call.
 void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y)
 {
     // Get key
@@ -153,11 +154,15 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
     if(key == NULL)
         return;
     
+    // TODO: Follow z_index for drawing order
+    
     // Go through each temp object
     for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
     {
-        GPU_Image* img = fs->getImage(e->second->folder, e->second->file);
-        GPU_Blit(img, NULL, screen, x, y);
+        SCML::Data::Entity::Animation::Mainline::Key::Object* obj = e->second;
+        
+        GPU_Image* img = fs->getImage(obj->folder, obj->file);
+            GPU_BlitTransformX(img, NULL, screen, x + obj->x + img->w/2 - obj->pivot_x*img->w, y - obj->y - img->h/2 + obj->pivot_y*img->h, obj->pivot_x*img->w, -obj->pivot_y*img->h, -obj->angle, obj->scale_x, obj->scale_y);
     }
     
     // Go through each object_ref
@@ -168,7 +173,7 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
         if(obj != NULL)
         {
             GPU_Image* img = fs->getImage(obj->folder, obj->file);
-            GPU_Blit(img, NULL, screen, x, y);
+            GPU_BlitTransformX(img, NULL, screen, x + obj->x + img->w/2 - obj->pivot_x*img->w, y - obj->y - img->h/2 + obj->pivot_y*img->h, obj->pivot_x*img->w, -obj->pivot_y*img->h, -obj->angle, obj->scale_x, obj->scale_y);
         }
     }
     
