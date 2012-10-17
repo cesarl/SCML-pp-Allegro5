@@ -1,4 +1,65 @@
 #include "SCML_SDL_gpu.h"
+#include "libgen.h"
+
+using namespace std;
+
+namespace SCML_SDL_gpu
+{
+
+
+void FileSystem::load(SCML::Data* data)
+{
+    if(data == NULL)
+        return;
+    
+    char buf[1000];
+    snprintf(buf, 1000, "%s", data->name.c_str());
+    string basedir = dirname(buf);
+    basedir += '/';
+    
+    for(map<int, SCML::Data::Folder*>::iterator e = data->folders.begin(); e != data->folders.end(); e++)
+    {
+        for(map<int, SCML::Data::Folder::File*>::iterator f = e->second->files.begin(); f != e->second->files.end(); f++)
+        {
+            if(f->second->type == "image")
+            {
+                printf("Loading \"%s\"\n", (basedir + f->second->name).c_str());
+                GPU_Image* img = GPU_LoadImage((basedir + f->second->name).c_str());
+                if(img != NULL)
+                {
+                    if(!images.insert(make_pair(make_pair(e->first, f->first), img)).second)
+                    {
+                        printf("SCML_SDL_gpu::FileSystem failed to load an image: duplicate folder/file id (%d/%d)\n", e->first, f->first);
+                        GPU_FreeImage(img);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FileSystem::clear()
+{
+    for(map<pair<int,int>, GPU_Image*>::iterator e = images.begin(); e != images.end(); e++)
+    {
+        GPU_FreeImage(e->second);
+    }
+    images.clear();
+}
+
+GPU_Image* FileSystem::getImage(int folder, int file) const
+{
+    map<pair<int,int>, GPU_Image*>::const_iterator e = images.find(make_pair(folder, file));
+    if(e == images.end())
+        return NULL;
+    return e->second;
+}
+
+
+
+
+
+
 
 
 
@@ -85,8 +146,39 @@ void Entity::update(SCML::Data* data, int dt_ms)
     }
 }
 
-void Entity::draw(SCML::Data* data, GPU_Target* screen, float x, float y)
+void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y)
 {
-    printf("Entity: %d, Animation: %d, Key: %d\n", entity, current_animation.animation, current_animation.key);
+    // Get key
+    SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
+    if(key == NULL)
+        return;
+    
+    // Go through each temp object
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
+    {
+        GPU_Image* img = fs->getImage(e->second->folder, e->second->file);
+        GPU_Blit(img, NULL, screen, x, y);
+    }
+    
+    // Go through each object_ref
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
+    {
+        // Dereference object_ref
+        SCML::Data::Entity::Animation::Timeline::Key::Object* obj = data->getTimelineObject(entity, current_animation.animation, e->second->timeline, e->second->key);
+        if(obj != NULL)
+        {
+            GPU_Image* img = fs->getImage(obj->folder, obj->file);
+            GPU_Blit(img, NULL, screen, x, y);
+        }
+    }
+    
+}
+
+
+
+
+
+
+
 }
 

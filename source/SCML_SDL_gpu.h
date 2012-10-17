@@ -3,8 +3,24 @@
 
 #include "SDL_gpu.h"
 #include "SCMLpp.h"
+#include <map>
 
-
+namespace SCML_SDL_gpu
+{
+    
+class FileSystem
+{
+    public:
+    
+    // Folder, File
+    std::map<std::pair<int, int>, GPU_Image*> images;
+    
+    void load(SCML::Data* data);
+    void clear();
+    
+    GPU_Image* getImage(int folder, int file) const;
+    
+};
 
 class Entity
 {
@@ -31,12 +47,12 @@ class Entity
     Entity(int entity, int animation = 0, int key = 0);
     
     void update(SCML::Data* data, int dt_ms);
-    void draw(SCML::Data* data, GPU_Target* screen, float x, float y);
+    void draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y);
     
     void startAnimation(int animation);
 };
 
-
+}
 
 
 

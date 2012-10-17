@@ -13,6 +13,7 @@ class Data
 {
     public:
     
+    std::string name;
     std::string scml_version;
     std::string generator;
     std::string generator_version;
@@ -631,6 +632,7 @@ class Data
     int getNumAnimations(int entity) const;
     Entity::Animation* getAnimation(int entity, int animation) const;
     Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
+    Entity::Animation::Timeline::Key::Object* getTimelineObject(int entity, int animation, int timeline, int key);
 };
 
 }

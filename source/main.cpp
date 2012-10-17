@@ -1,6 +1,6 @@
 #include <iostream>
 #include "SCMLpp.h"
-#include "renderer.h"
+#include "main.h"
 
 using namespace std;
 

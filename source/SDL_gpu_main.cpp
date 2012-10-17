@@ -2,6 +2,7 @@
 #include <list>
 
 using namespace std;
+using namespace SCML_SDL_gpu;
 
 GPU_Target* screen = NULL;
 Uint8* keystates = NULL;
@@ -14,6 +15,11 @@ void main_loop(SCML::Data* data)
     {
         entities.push_back(new Entity(e->first));
     }
+    
+    FileSystem fs;
+    fs.load(data);
+    printf("Loaded %d images.\n", fs.images.size());
+    
     
     bool done = false;
     SDL_Event event;
@@ -52,7 +58,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(data, screen, 400, 300);
+            (*e)->draw(data, &fs, screen, 400, 300);
         }
         
         
