@@ -89,9 +89,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="SCML_SDL_gpu.cpp" />
+		<Unit filename="SCML_SDL_gpu.h" />
 		<Unit filename="SCMLpp.cpp" />
 		<Unit filename="SCMLpp.h" />
-		<Unit filename="SDL_gpu_renderer.cpp" />
+		<Unit filename="SDL_gpu_main.cpp" />
 		<Unit filename="libraries/XML_Helpers.cpp" />
 		<Unit filename="libraries/XML_Helpers.h" />
 		<Unit filename="libraries/tinystr.cpp" />
@@ -101,7 +103,7 @@
 		<Unit filename="libraries/tinyxmlerror.cpp" />
 		<Unit filename="libraries/tinyxmlparser.cpp" />
 		<Unit filename="main.cpp" />
-		<Unit filename="renderer.h" />
+		<Unit filename="main.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

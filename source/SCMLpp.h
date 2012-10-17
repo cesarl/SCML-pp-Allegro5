@@ -627,6 +627,10 @@ class Data
     };
     
     Document_Info document_info;
+    
+    int getNumAnimations(int entity) const;
+    Entity::Animation* getAnimation(int entity, int animation) const;
+    Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
 };
 
 }

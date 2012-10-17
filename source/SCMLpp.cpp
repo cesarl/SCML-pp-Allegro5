@@ -266,6 +266,46 @@ void Data::clear()
 }
 
 
+int Data::getNumAnimations(int entity) const
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return -1;
+    
+    return e->second->animations.size();
+}
+
+Data::Entity::Animation* Data::getAnimation(int entity, int animation) const
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return NULL;
+    
+    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
+    if(a == e->second->animations.end())
+        return NULL;
+    
+    return a->second;
+}
+
+Data::Entity::Animation::Mainline::Key* Data::getKey(int entity, int animation, int key) const
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return NULL;
+    
+    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
+    if(a == e->second->animations.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
+    if(k == a->second->mainline.keys.end())
+        return NULL;
+    
+    return k->second;
+}
+
+
 
 
 
