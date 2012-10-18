@@ -196,7 +196,7 @@ class TweenInfo
         if(key2->time == key1->time)
             return;
         
-        t = (time - key1->time)/float(key2->time - key1->time);
+        t = (time - key1->time)/float(key2->time - key1->time);  // wrong!  Use the timeline key.
     }
 };
 
@@ -258,25 +258,29 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
             // No image tweening
             GPU_Image* img = fs->getImage(obj1->folder, obj1->file);
             
-            float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, tween_info.t);
-            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, tween_info.t);
+            float t = 0.0f;
+            if(t_key2->time != t_key1->time)
+                t = (current_animation.time - t_key1->time)/float(t_key2->time - t_key1->time);
+            
+            float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t);
+            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t);
             
             // Is 'spin' what you are coming from (key1) or what you are going to (key2)?
             float angle_i;
             if(t_key1->spin > 0 && obj2->angle - obj1->angle < 0.0f)
-                angle_i = lerp(obj1->angle, obj2->angle + 360, tween_info.t);
+                angle_i = lerp(obj1->angle, obj2->angle + 360, t);
             else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.0f)
-                angle_i = lerp(obj1->angle, obj2->angle - 360, tween_info.t);
+                angle_i = lerp(obj1->angle, obj2->angle - 360, t);
             else
-                angle_i = lerp(obj1->angle, obj2->angle, tween_info.t);
-            float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, tween_info.t);
-            float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, tween_info.t);
+                angle_i = lerp(obj1->angle, obj2->angle, t);
+            float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
+            float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
             
-            float ax = lerp(obj1->x, obj2->x, tween_info.t);
+            float ax = lerp(obj1->x, obj2->x, t);
             float bx = img->w/2;
             float cx = -pivot_x*img->w;
             
-            float ay = lerp(-obj1->y, -obj2->y, tween_info.t);
+            float ay = lerp(-obj1->y, -obj2->y, t);
             float by = -img->h/2;
             float cy = pivot_y*img->h;
             
