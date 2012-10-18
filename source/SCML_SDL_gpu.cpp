@@ -1,5 +1,6 @@
 #include "SCML_SDL_gpu.h"
 #include "libgen.h"
+#include <cmath>
 
 using namespace std;
 
@@ -182,7 +183,7 @@ class TweenInfo
 };
 
 // TODO: Add scaling and rotation to this call.
-void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y)
+void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y, float angle, float scale_x, float scale_y)
 {
     // Get key
     SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
@@ -197,7 +198,20 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
         SCML::Data::Entity::Animation::Mainline::Key::Object* obj = e->second;
         
         GPU_Image* img = fs->getImage(obj->folder, obj->file);
-            GPU_BlitTransformX(img, NULL, screen, x + obj->x + img->w/2 - obj->pivot_x*img->w, y - obj->y - img->h/2 + obj->pivot_y*img->h, obj->pivot_x*img->w, -obj->pivot_y*img->h, -obj->angle, obj->scale_x, obj->scale_y);
+        
+        float ax = obj->x;
+        float bx = img->w/2;
+        float cx = -obj->pivot_x*img->w;
+        
+        float ay = -obj->y;
+        float by = -img->h/2;
+        float cy = obj->pivot_y*img->h;
+        
+        float xx = (ax + bx)*scale_x;
+        float yy = (ay + by)*scale_y;
+        float c = cos(angle*M_PI/180.0f);
+        float s = sin(angle*M_PI/180.0f);
+        GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, obj->pivot_x*img->w*scale_x, -obj->pivot_y*img->h*scale_y, -obj->angle + angle, obj->scale_x*scale_x, obj->scale_y*scale_y);
     }
     
     // Go through each object_ref
@@ -208,10 +222,22 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
         if(obj != NULL)
         {
             GPU_Image* img = fs->getImage(obj->folder, obj->file);
-            GPU_BlitTransformX(img, NULL, screen, x + obj->x + img->w/2 - obj->pivot_x*img->w, y - obj->y - img->h/2 + obj->pivot_y*img->h, obj->pivot_x*img->w, -obj->pivot_y*img->h, -obj->angle, obj->scale_x, obj->scale_y);
+            
+            float ax = obj->x;
+            float bx = img->w/2;
+            float cx = -obj->pivot_x*img->w;
+            
+            float ay = -obj->y;
+            float by = -img->h/2;
+            float cy = obj->pivot_y*img->h;
+            
+            float xx = (ax + bx)*scale_x;
+            float yy = (ay + by)*scale_y;
+            float c = cos(angle*M_PI/180.0f);
+            float s = sin(angle*M_PI/180.0f);
+            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, obj->pivot_x*img->w*scale_x, -obj->pivot_y*img->h*scale_y, -obj->angle + angle, obj->scale_x*scale_x, obj->scale_y*scale_y);
         }
     }
-    
 }
 
 

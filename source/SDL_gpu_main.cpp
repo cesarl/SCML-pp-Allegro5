@@ -22,6 +22,8 @@ void main_loop(SCML::Data* data)
     
     float x = 400.0f;
     float y = 300.0f;
+    float angle = 0.0f;
+    float scale = 1.0f;
     
     bool done = false;
     SDL_Event event;
@@ -58,6 +60,14 @@ void main_loop(SCML::Data* data)
             x -= 100*dt_ms/1000.0f;
         else if(keystates[SDLK_RIGHT])
             x += 100*dt_ms/1000.0f;
+        if(keystates[SDLK_MINUS])
+            scale -= 0.2f*dt_ms/1000.0f;
+        else if(keystates[SDLK_EQUALS] || keystates[SDLK_PLUS])
+            scale += 0.2f*dt_ms/1000.0f;
+        if(keystates[SDLK_COMMA])
+            angle -= 100*dt_ms/1000.0f;
+        else if(keystates[SDLK_PERIOD])
+            angle += 100*dt_ms/1000.0f;
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
@@ -69,7 +79,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(data, &fs, screen, x, y);
+            (*e)->draw(data, &fs, screen, x, y, angle, scale, scale);
         }
         
         

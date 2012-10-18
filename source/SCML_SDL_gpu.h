@@ -47,7 +47,7 @@ class Entity
     Entity(int entity, int animation = 0, int key = 0);
     
     void update(SCML::Data* data, int dt_ms);
-    void draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y);
+    void draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
     
     void startAnimation(int animation);
 };
