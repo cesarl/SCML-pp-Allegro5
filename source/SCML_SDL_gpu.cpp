@@ -86,6 +86,40 @@ Entity::Animation::Animation(int animation, int key)
     : animation(animation), key(key), time(0)
 {}
 
+// Gets the next key index according to the animation's looping setting.
+int getNextKey(SCML::Data* data, int entity, int animation, int lastKey)
+{
+    if(data == NULL || entity < 0 || animation < 0 || lastKey < 0)
+        return -1;
+    
+    
+    SCML::Data::Entity::Animation* animationP = data->getAnimation(entity, animation);
+    if(animationP == NULL)
+        return -2;
+    
+    if(animationP->looping == "true")
+    {
+        // If we've reached the end of the keys, loop.
+        if(lastKey+1 >= int(animationP->mainline.keys.size()))
+            return animationP->loop_to;
+        else
+            return lastKey+1;
+    }
+    else if(animationP->looping == "ping_pong")
+    {
+        // TODO: Implement ping_pong animation
+        return -3;
+    }
+    else  // assume "false"
+    {
+        // If we've haven't reached the end of the keys, return the next one.
+        if(lastKey+1 < int(animationP->mainline.keys.size()))
+            return lastKey+1;
+        else // if we have reached the end, stick to this key
+            return lastKey;
+    }
+}
+
 void Entity::update(SCML::Data* data, int dt_ms)
 {
     if(data == NULL || entity < 0 || current_animation.animation < 0 || current_animation.key < 0)
@@ -96,55 +130,56 @@ void Entity::update(SCML::Data* data, int dt_ms)
     if(animation == NULL)
         return;
     
-    int numKeys = animation->mainline.keys.size();
+    int nextKey = getNextKey(data, entity, current_animation.animation, current_animation.key);
     int nextTime = 0;
-    if(current_animation.key+1 >= numKeys)
+    if(nextKey < current_animation.key)
     {
-        // No next key, so use end of animation time
+        // Next key is not after this one, so use end of animation time
         nextTime = animation->length;
     }
     else
     {
-        SCML::Data::Entity::Animation::Mainline::Key* nextKey = data->getKey(entity, current_animation.animation, current_animation.key+1);
-        if(nextKey != NULL)
+        // Get nextTime from the nextKey
+        SCML::Data::Entity::Animation::Mainline::Key* nextKeyP = data->getKey(entity, current_animation.animation, nextKey);
+        if(nextKeyP != NULL)
         {
-            nextTime = nextKey->time;
+            nextTime = nextKeyP->time;
         }
     }
     
     current_animation.time += dt_ms;
     if(current_animation.time >= nextTime)
     {
+        int overshot = current_animation.time - nextTime;
+        
         // Advance to next key
-        if(animation->looping == "true")
+        current_animation.key = nextKey;
+        
+        // Get the starting time from the new key.
+        SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
+        if(key != NULL)
         {
-            // If we've reached the end of the keys, loop.
-            if(current_animation.key+1 >= int(animation->mainline.keys.size()))
-            {
-                // Set key to the loop_to key.
-                current_animation.key = animation->loop_to;
-                // Get the starting time from the new key.
-                SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
-                if(key != NULL)
-                {
-                    current_animation.time = key->time;
-                }
-            }
-            else
-                current_animation.key++;
-        }
-        else if(animation->looping == "ping_pong")
-        {
-            // TODO: Implement ping_pong animation
-        }
-        else  // assume "false"
-        {
-            // If we've haven't reached the end of the keys, go to the next one.
-            if(current_animation.key+1 < int(animation->mainline.keys.size()))
-                current_animation.key++;
+            current_animation.time = key->time + overshot;
         }
     }
 }
+
+
+class TweenInfo
+{
+    public:
+    
+    int entity;
+    int animation;
+    int lastKey;
+    int nextKey;
+    float t;
+    
+    TweenInfo(SCML::Data* data, int entity, int animation, int lastKey, int time)
+    {
+        
+    }
+};
 
 // TODO: Add scaling and rotation to this call.
 void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y)
