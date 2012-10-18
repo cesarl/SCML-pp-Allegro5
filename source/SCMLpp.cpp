@@ -308,6 +308,28 @@ Data::Entity::Animation::Mainline::Key* Data::getKey(int entity, int animation, 
 }
 
 
+Data::Entity::Animation::Timeline::Key* Data::getTimelineKey(int entity, int animation, int timeline, int key)
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return NULL;
+    
+    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
+    if(a == e->second->animations.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
+    if(t == a->second->timelines.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
+    if(k == t->second->keys.end())
+        return NULL;
+    
+    return k->second;
+}
+
+
 Data::Entity::Animation::Timeline::Key::Object* Data::getTimelineObject(int entity, int animation, int timeline, int key)
 {
     map<int, Entity*>::const_iterator e = entities.find(entity);

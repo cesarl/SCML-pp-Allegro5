@@ -175,12 +175,35 @@ class TweenInfo
     int lastKey;
     int nextKey;
     float t;
+    SCML::Data::Entity::Animation::Mainline::Key* key1;
+    SCML::Data::Entity::Animation::Mainline::Key* key2;
     
     TweenInfo(SCML::Data* data, int entity, int animation, int lastKey, int time)
+        : entity(entity), animation(animation), lastKey(lastKey), t(0.0f), key1(NULL), key2(NULL)
     {
+        nextKey = getNextKey(data, entity, animation, lastKey);
         
+        // Get key
+        key1 = data->getKey(entity, animation, lastKey);
+        if(key1 == NULL)
+            return;
+        
+        // Get next key
+        key2 = data->getKey(entity, animation, nextKey);
+        if(key2 == NULL)
+            return;
+        
+        if(key2->time == key1->time)
+            return;
+        
+        t = (time - key1->time)/float(key2->time - key1->time);
     }
 };
+
+inline float lerp(float a, float b, float t)
+{
+    return a + (b-a)*t;
+}
 
 // TODO: Add scaling and rotation to this call.
 void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y, float angle, float scale_x, float scale_y)
@@ -214,7 +237,61 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
         GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, obj->pivot_x*img->w*scale_x, -obj->pivot_y*img->h*scale_y, -obj->angle + angle, obj->scale_x*scale_x, obj->scale_y*scale_y);
     }
     
-    // Go through each object_ref
+    // Assuming that each object in a timeline's key corresponds to the object in every other timeline at the same sequential position...
+    TweenInfo tween_info(data, entity, current_animation.animation, current_animation.key, current_animation.time);
+    SCML::Data::Entity::Animation::Mainline::Key* key1 = key;
+    SCML::Data::Entity::Animation::Mainline::Key* key2 = data->getKey(entity, current_animation.animation, tween_info.nextKey);
+    
+    map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e1 = key1->object_refs.begin();
+    map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e2 = key2->object_refs.begin();
+    while(e1 != key1->object_refs.end() && e2 != key2->object_refs.end())
+    {
+        // Dereference object_refs
+        SCML::Data::Entity::Animation::Timeline::Key* t_key1 = data->getTimelineKey(entity, current_animation.animation, e1->second->timeline, e1->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key* t_key2 = data->getTimelineKey(entity, current_animation.animation, e2->second->timeline, e2->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key::Object* obj1 = data->getTimelineObject(entity, current_animation.animation, e1->second->timeline, e1->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key::Object* obj2 = data->getTimelineObject(entity, current_animation.animation, e2->second->timeline, e2->second->key);
+        if(obj2 == NULL)
+            obj2 = obj1;
+        if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
+        {
+            // No image tweening
+            GPU_Image* img = fs->getImage(obj1->folder, obj1->file);
+            
+            float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, tween_info.t);
+            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, tween_info.t);
+            
+            // Is 'spin' what you are coming from (key1) or what you are going to (key2)?
+            float angle_i;
+            if(t_key1->spin > 0 && obj2->angle - obj1->angle < 0.0f)
+                angle_i = lerp(obj1->angle, obj2->angle + 360, tween_info.t);
+            else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.0f)
+                angle_i = lerp(obj1->angle, obj2->angle - 360, tween_info.t);
+            else
+                angle_i = lerp(obj1->angle, obj2->angle, tween_info.t);
+            float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, tween_info.t);
+            float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, tween_info.t);
+            
+            float ax = lerp(obj1->x, obj2->x, tween_info.t);
+            float bx = img->w/2;
+            float cx = -pivot_x*img->w;
+            
+            float ay = lerp(-obj1->y, -obj2->y, tween_info.t);
+            float by = -img->h/2;
+            float cy = pivot_y*img->h;
+            
+            float xx = (ax + bx)*scale_x;
+            float yy = (ay + by)*scale_y;
+            float c = cos(angle*M_PI/180.0f);
+            float s = sin(angle*M_PI/180.0f);
+            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, pivot_x*img->w*scale_x, -pivot_y*img->h*scale_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
+        }
+        
+        e1++;
+        e2++;
+    }
+    
+    /*// Go through each object_ref
     for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
     {
         // Dereference object_ref
@@ -237,7 +314,7 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
             float s = sin(angle*M_PI/180.0f);
             GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, obj->pivot_x*img->w*scale_x, -obj->pivot_y*img->h*scale_y, -obj->angle + angle, obj->scale_x*scale_x, obj->scale_y*scale_y);
         }
-    }
+    }*/
 }
 
 

@@ -632,6 +632,7 @@ class Data
     int getNumAnimations(int entity) const;
     Entity::Animation* getAnimation(int entity, int animation) const;
     Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
+    Entity::Animation::Timeline::Key* getTimelineKey(int entity, int animation, int timeline, int key);
     Entity::Animation::Timeline::Key::Object* getTimelineObject(int entity, int animation, int timeline, int key);
 };
 
