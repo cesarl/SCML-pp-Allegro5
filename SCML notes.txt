@@ -1,0 +1,5 @@
+
+
+
+Timelines represent a single object that is changing over time.  Timelines can not currently be matched between separate animations.
+

@@ -102,7 +102,6 @@ class Data
         int id;
         std::string name;
         
-        //std::map<int, Folder*> folders;  // FIXME: Are subfolders allowed?  Do they appear nested in SCML?
         class File;
         std::map<int, File*> files;
         

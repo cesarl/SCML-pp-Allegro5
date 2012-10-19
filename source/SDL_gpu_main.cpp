@@ -91,6 +91,10 @@ void main_loop(SCML::Data* data)
         framestart = framefinish;
     }
     
+    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+    {
+        delete (*e);
+    }
 }
 
 

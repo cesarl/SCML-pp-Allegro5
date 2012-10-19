@@ -288,37 +288,16 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
             float yy = (ay + by)*scale_y;
             float c = cos(angle*M_PI/180.0f);
             float s = sin(angle*M_PI/180.0f);
-            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, pivot_x*img->w*scale_x, -pivot_y*img->h*scale_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
+            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, (pivot_x*img->w - img->w/2)*scale_x, (-pivot_y*img->h + img->h/2)*scale_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
+        
+            // debug draw pivot
+            //SDL_Color red = {255, 0, 0, 255};
+            //GPU_CircleFilled(screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, 3, red);
         }
         
         e1++;
         e2++;
     }
-    
-    /*// Go through each object_ref
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
-    {
-        // Dereference object_ref
-        SCML::Data::Entity::Animation::Timeline::Key::Object* obj = data->getTimelineObject(entity, current_animation.animation, e->second->timeline, e->second->key);
-        if(obj != NULL)
-        {
-            GPU_Image* img = fs->getImage(obj->folder, obj->file);
-            
-            float ax = obj->x;
-            float bx = img->w/2;
-            float cx = -obj->pivot_x*img->w;
-            
-            float ay = -obj->y;
-            float by = -img->h/2;
-            float cy = obj->pivot_y*img->h;
-            
-            float xx = (ax + bx)*scale_x;
-            float yy = (ay + by)*scale_y;
-            float c = cos(angle*M_PI/180.0f);
-            float s = sin(angle*M_PI/180.0f);
-            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, obj->pivot_x*img->w*scale_x, -obj->pivot_y*img->h*scale_y, -obj->angle + angle, obj->scale_x*scale_x, obj->scale_y*scale_y);
-        }
-    }*/
 }
 
 
