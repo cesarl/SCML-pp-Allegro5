@@ -276,23 +276,21 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
             float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
             float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
             
-            float ax = lerp(obj1->x, obj2->x, t);
-            float bx = img->w/2;
-            float cx = -pivot_x*img->w;
+            // Move image to draw from and rotate about the pivot point (SDL_gpu draws images at their center point)
+            float offset_x = (-pivot_x*img->w + img->w/2)*scale_x;
+            float offset_y = (pivot_y*img->h - img->h/2)*scale_y;
             
-            float ay = lerp(-obj1->y, -obj2->y, t);
-            float by = -img->h/2;
-            float cy = pivot_y*img->h;
-            
-            float xx = (ax + bx)*scale_x;
-            float yy = (ay + by)*scale_y;
+            // Rotation of the relative object position
+            float r_x = lerp(obj1->x, obj2->x, t)*scale_x;
+            float r_y = lerp(-obj1->y, -obj2->y, t)*scale_y;
             float c = cos(angle*M_PI/180.0f);
             float s = sin(angle*M_PI/180.0f);
-            GPU_BlitTransformX(img, NULL, screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, (pivot_x*img->w - img->w/2)*scale_x, (-pivot_y*img->h + img->h/2)*scale_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
+            
+            GPU_BlitTransformX(img, NULL, screen, x + offset_x + (r_x*c - r_y*s), y + offset_y + (r_x*s + r_y*c), -offset_x, -offset_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
         
             // debug draw pivot
             //SDL_Color red = {255, 0, 0, 255};
-            //GPU_CircleFilled(screen, x + cx*scale_x + xx*c - yy*s, y + cy*scale_y + xx*s + yy*c, 3, red);
+            //GPU_CircleFilled(screen, x + offset_x + (r_x*c - r_y*s), y + offset_y + (r_x*s + r_y*c), 3, red);
         }
         
         e1++;
