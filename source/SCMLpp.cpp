@@ -307,6 +307,40 @@ Data::Entity::Animation::Mainline::Key* Data::getKey(int entity, int animation, 
     return k->second;
 }
 
+// Gets the next key index according to the animation's looping setting.
+int Data::getNextKeyID(int entity, int animation, int lastKey) const
+{
+    if(entity < 0 || animation < 0 || lastKey < 0)
+        return -1;
+    
+    
+    SCML::Data::Entity::Animation* animation_ptr = getAnimation(entity, animation);
+    if(animation_ptr == NULL)
+        return -2;
+    
+    if(animation_ptr->looping == "true")
+    {
+        // If we've reached the end of the keys, loop.
+        if(lastKey+1 >= int(animation_ptr->mainline.keys.size()))
+            return animation_ptr->loop_to;
+        else
+            return lastKey+1;
+    }
+    else if(animation_ptr->looping == "ping_pong")
+    {
+        // TODO: Implement ping_pong animation
+        return -3;
+    }
+    else  // assume "false"
+    {
+        // If we've haven't reached the end of the keys, return the next one.
+        if(lastKey+1 < int(animation_ptr->mainline.keys.size()))
+            return lastKey+1;
+        else // if we have reached the end, stick to this key
+            return lastKey;
+    }
+}
+
 
 Data::Entity::Animation::Timeline::Key* Data::getTimelineKey(int entity, int animation, int timeline, int key)
 {
@@ -2244,6 +2278,69 @@ void Data::Document_Info::clear()
 }
 
 
+
+
+
+
+Entity::Entity()
+    : entity(-1), animation(-1), key(-1), time(0)
+{}
+
+Entity::Entity(int entity, int animation, int key)
+    : entity(entity), animation(animation), key(key), time(0)
+{}
+
+void Entity::startAnimation(int animation)
+{
+    this->animation = animation;
+    key = 0;
+    time = 0;
+}
+
+
+void Entity::update(SCML::Data* data, int dt_ms)
+{
+    if(data == NULL || entity < 0 || animation < 0 || key < 0)
+        return;
+    
+    
+    SCML::Data::Entity::Animation* animation_ptr = data->getAnimation(entity, animation);
+    if(animation_ptr == NULL)
+        return;
+    
+    int nextKey = data->getNextKeyID(entity, animation, key);
+    int nextTime = 0;
+    if(nextKey < key)
+    {
+        // Next key is not after this one, so use end of animation time
+        nextTime = animation_ptr->length;
+    }
+    else
+    {
+        // Get nextTime from the nextKey
+        SCML::Data::Entity::Animation::Mainline::Key* nextKey_ptr = data->getKey(entity, animation, nextKey);
+        if(nextKey_ptr != NULL)
+        {
+            nextTime = nextKey_ptr->time;
+        }
+    }
+    
+    time += dt_ms;
+    if(time >= nextTime)
+    {
+        int overshot = time - nextTime;
+        
+        // Advance to next key
+        key = nextKey;
+        
+        // Get the starting time from the new key.
+        SCML::Data::Entity::Animation::Mainline::Key* key_ptr = data->getKey(entity, animation, key);
+        if(key_ptr != NULL)
+        {
+            time = key_ptr->time + overshot;
+        }
+    }
+}
 
 
 }

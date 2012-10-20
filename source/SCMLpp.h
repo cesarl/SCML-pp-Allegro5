@@ -631,9 +631,43 @@ class Data
     int getNumAnimations(int entity) const;
     Entity::Animation* getAnimation(int entity, int animation) const;
     Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
+    
+    int getNextKeyID(int entity, int animation, int lastKey) const;
     Entity::Animation::Timeline::Key* getTimelineKey(int entity, int animation, int timeline, int key);
     Entity::Animation::Timeline::Key::Object* getTimelineObject(int entity, int animation, int timeline, int key);
 };
+
+
+class FileSystem
+{
+    public:
+    
+    virtual ~FileSystem(){}
+    virtual void load(SCML::Data* data) = 0;
+    virtual void clear() = 0;
+};
+
+
+class Entity
+{
+    public:
+    
+    int entity;
+    int animation;
+    int key;
+    
+    int time;  // milliseconds
+    
+    Entity();
+    Entity(int entity, int animation = 0, int key = 0);
+    virtual ~Entity(){}
+    
+    virtual void update(SCML::Data* data, int dt_ms);
+    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f) = 0;
+    
+    virtual void startAnimation(int animation);
+};
+
 
 }
 

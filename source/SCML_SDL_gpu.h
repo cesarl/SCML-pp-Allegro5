@@ -8,48 +8,36 @@
 namespace SCML_SDL_gpu
 {
     
-class FileSystem
+class FileSystem : public SCML::FileSystem
 {
     public:
     
     // Folder, File
     std::map<std::pair<int, int>, GPU_Image*> images;
+    // TODO: Destructor, etc.
     
-    void load(SCML::Data* data);
-    void clear();
+    virtual ~FileSystem();
+    virtual void load(SCML::Data* data);
+    virtual void clear();
     
     GPU_Image* getImage(int folder, int file) const;
     
 };
 
-class Entity
+class Entity : public SCML::Entity
 {
     public:
     
-    int entity;
-    
-    class Animation
-    {
-        public:
-        
-        int animation;
-        int key;
-        
-        int time;  // milliseconds
-        
-        Animation();
-        Animation(int animation, int key);
-    };
-    
-    Animation current_animation;
+    SCML_SDL_gpu::FileSystem* file_system;
+    GPU_Target* screen;
     
     Entity();
     Entity(int entity, int animation = 0, int key = 0);
     
-    void update(SCML::Data* data, int dt_ms);
-    void draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
+    SCML_SDL_gpu::FileSystem* setFileSystem(SCML_SDL_gpu::FileSystem* fs);
+    GPU_Target* setScreen(GPU_Target* scr);
     
-    void startAnimation(int animation);
+    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
 };
 
 }

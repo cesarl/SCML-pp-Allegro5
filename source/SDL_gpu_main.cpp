@@ -10,15 +10,20 @@ Uint8* keystates = NULL;
 
 void main_loop(SCML::Data* data)
 {
-    list<Entity*> entities;
-    for(map<int, SCML::Data::Entity*>::iterator e = data->entities.begin(); e != data->entities.end(); e++)
-    {
-        entities.push_back(new Entity(e->first));
-    }
     
     FileSystem fs;
     fs.load(data);
     printf("Loaded %zu images.\n", fs.images.size());
+    
+    list<Entity*> entities;
+    for(map<int, SCML::Data::Entity*>::iterator e = data->entities.begin(); e != data->entities.end(); e++)
+    {
+        Entity* entity = new Entity(e->first);
+        entity->setFileSystem(&fs);
+        entity->setScreen(screen);
+        entities.push_back(entity);
+    }
+    printf("Loaded %zu entities.\n", entities.size());
     
     float x = 400.0f;
     float y = 300.0f;
@@ -79,7 +84,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(data, &fs, screen, x, y, angle, scale, scale);
+            (*e)->draw(data, x, y, angle, scale, scale);
         }
         
         

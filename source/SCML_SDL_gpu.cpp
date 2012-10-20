@@ -27,6 +27,11 @@ static bool pathIsAbsolute(const std::string& path)
     return false;
 }
 
+FileSystem::~FileSystem()
+{
+    clear();
+}
+
 void FileSystem::load(SCML::Data* data)
 {
     if(data == NULL || data->name.size() == 0)
@@ -88,166 +93,53 @@ GPU_Image* FileSystem::getImage(int folder, int file) const
 
 
 
-
-
-
+    
 Entity::Entity()
-    : entity(-1), current_animation()
+    : SCML::Entity()
 {}
 
 Entity::Entity(int entity, int animation, int key)
-    : entity(entity), current_animation(animation, key)
+    : SCML::Entity(entity, animation, key)
 {}
 
-void Entity::startAnimation(int animation)
+FileSystem* Entity::setFileSystem(FileSystem* fs)
 {
-    current_animation.animation = animation;
-    current_animation.key = 0;
-    current_animation.time = 0;
+    FileSystem* old = file_system;
+    file_system = fs;
+    return old;
 }
 
-Entity::Animation::Animation()
-    : animation(-1), key(-1), time(0)
-{}
-
-Entity::Animation::Animation(int animation, int key)
-    : animation(animation), key(key), time(0)
-{}
-
-// Gets the next key index according to the animation's looping setting.
-int getNextKey(SCML::Data* data, int entity, int animation, int lastKey)
+GPU_Target* Entity::setScreen(GPU_Target* scr)
 {
-    if(data == NULL || entity < 0 || animation < 0 || lastKey < 0)
-        return -1;
-    
-    
-    SCML::Data::Entity::Animation* animationP = data->getAnimation(entity, animation);
-    if(animationP == NULL)
-        return -2;
-    
-    if(animationP->looping == "true")
-    {
-        // If we've reached the end of the keys, loop.
-        if(lastKey+1 >= int(animationP->mainline.keys.size()))
-            return animationP->loop_to;
-        else
-            return lastKey+1;
-    }
-    else if(animationP->looping == "ping_pong")
-    {
-        // TODO: Implement ping_pong animation
-        return -3;
-    }
-    else  // assume "false"
-    {
-        // If we've haven't reached the end of the keys, return the next one.
-        if(lastKey+1 < int(animationP->mainline.keys.size()))
-            return lastKey+1;
-        else // if we have reached the end, stick to this key
-            return lastKey;
-    }
-}
-
-void Entity::update(SCML::Data* data, int dt_ms)
-{
-    if(data == NULL || entity < 0 || current_animation.animation < 0 || current_animation.key < 0)
-        return;
-    
-    
-    SCML::Data::Entity::Animation* animation = data->getAnimation(entity, current_animation.animation);
-    if(animation == NULL)
-        return;
-    
-    int nextKey = getNextKey(data, entity, current_animation.animation, current_animation.key);
-    int nextTime = 0;
-    if(nextKey < current_animation.key)
-    {
-        // Next key is not after this one, so use end of animation time
-        nextTime = animation->length;
-    }
-    else
-    {
-        // Get nextTime from the nextKey
-        SCML::Data::Entity::Animation::Mainline::Key* nextKeyP = data->getKey(entity, current_animation.animation, nextKey);
-        if(nextKeyP != NULL)
-        {
-            nextTime = nextKeyP->time;
-        }
-    }
-    
-    current_animation.time += dt_ms;
-    if(current_animation.time >= nextTime)
-    {
-        int overshot = current_animation.time - nextTime;
-        
-        // Advance to next key
-        current_animation.key = nextKey;
-        
-        // Get the starting time from the new key.
-        SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
-        if(key != NULL)
-        {
-            current_animation.time = key->time + overshot;
-        }
-    }
+    GPU_Target* old = screen;
+    screen = scr;
+    return old;
 }
 
 
-class TweenInfo
-{
-    public:
-    
-    int entity;
-    int animation;
-    int lastKey;
-    int nextKey;
-    float t;
-    SCML::Data::Entity::Animation::Mainline::Key* key1;
-    SCML::Data::Entity::Animation::Mainline::Key* key2;
-    
-    TweenInfo(SCML::Data* data, int entity, int animation, int lastKey, int time)
-        : entity(entity), animation(animation), lastKey(lastKey), t(0.0f), key1(NULL), key2(NULL)
-    {
-        nextKey = getNextKey(data, entity, animation, lastKey);
-        
-        // Get key
-        key1 = data->getKey(entity, animation, lastKey);
-        if(key1 == NULL)
-            return;
-        
-        // Get next key
-        key2 = data->getKey(entity, animation, nextKey);
-        if(key2 == NULL)
-            return;
-        
-        if(key2->time == key1->time)
-            return;
-        
-        t = (time - key1->time)/float(key2->time - key1->time);  // wrong!  Use the timeline key.
-    }
-};
+
 
 inline float lerp(float a, float b, float t)
 {
     return a + (b-a)*t;
 }
 
-// TODO: Add scaling and rotation to this call.
-void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* screen, float x, float y, float angle, float scale_x, float scale_y)
+
+void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y)
 {
     // Get key
-    SCML::Data::Entity::Animation::Mainline::Key* key = data->getKey(entity, current_animation.animation, current_animation.key);
-    if(key == NULL)
+    SCML::Data::Entity::Animation::Mainline::Key* key_ptr = data->getKey(entity, animation, key);
+    if(key_ptr == NULL)
         return;
     
     // TODO: Follow z_index for drawing order
     
     // Go through each temp object
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
     {
         SCML::Data::Entity::Animation::Mainline::Key::Object* obj = e->second;
         
-        GPU_Image* img = fs->getImage(obj->folder, obj->file);
+        GPU_Image* img = file_system->getImage(obj->folder, obj->file);
         
         float ax = obj->x;
         float bx = img->w/2;
@@ -265,29 +157,28 @@ void Entity::draw(SCML::Data* data, SCML_SDL_gpu::FileSystem* fs, GPU_Target* sc
     }
     
     // Assuming that each object in a timeline's key corresponds to the object in every other timeline at the same sequential position...
-    TweenInfo tween_info(data, entity, current_animation.animation, current_animation.key, current_animation.time);
-    SCML::Data::Entity::Animation::Mainline::Key* key1 = key;
-    SCML::Data::Entity::Animation::Mainline::Key* key2 = data->getKey(entity, current_animation.animation, tween_info.nextKey);
+    SCML::Data::Entity::Animation::Mainline::Key* key1 = key_ptr;
+    SCML::Data::Entity::Animation::Mainline::Key* key2 = data->getKey(entity, animation, data->getNextKeyID(entity, animation, key));
     
     map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e1 = key1->object_refs.begin();
     map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e2 = key2->object_refs.begin();
     while(e1 != key1->object_refs.end() && e2 != key2->object_refs.end())
     {
         // Dereference object_refs
-        SCML::Data::Entity::Animation::Timeline::Key* t_key1 = data->getTimelineKey(entity, current_animation.animation, e1->second->timeline, e1->second->key);
-        SCML::Data::Entity::Animation::Timeline::Key* t_key2 = data->getTimelineKey(entity, current_animation.animation, e2->second->timeline, e2->second->key);
-        SCML::Data::Entity::Animation::Timeline::Key::Object* obj1 = data->getTimelineObject(entity, current_animation.animation, e1->second->timeline, e1->second->key);
-        SCML::Data::Entity::Animation::Timeline::Key::Object* obj2 = data->getTimelineObject(entity, current_animation.animation, e2->second->timeline, e2->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key* t_key1 = data->getTimelineKey(entity, animation, e1->second->timeline, e1->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key* t_key2 = data->getTimelineKey(entity, animation, e2->second->timeline, e2->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key::Object* obj1 = data->getTimelineObject(entity, animation, e1->second->timeline, e1->second->key);
+        SCML::Data::Entity::Animation::Timeline::Key::Object* obj2 = data->getTimelineObject(entity, animation, e2->second->timeline, e2->second->key);
         if(obj2 == NULL)
             obj2 = obj1;
         if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
         {
             // No image tweening
-            GPU_Image* img = fs->getImage(obj1->folder, obj1->file);
+            GPU_Image* img = file_system->getImage(obj1->folder, obj1->file);
             
             float t = 0.0f;
             if(t_key2->time != t_key1->time)
-                t = (current_animation.time - t_key1->time)/float(t_key2->time - t_key1->time);
+                t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
             
             float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t);
             float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t);
