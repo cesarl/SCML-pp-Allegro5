@@ -1,22 +1,49 @@
 #include "SCML_SDL_gpu.h"
 #include "libgen.h"
+#include <cstdlib>
 #include <cmath>
+#include <climits>
+
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
 
 using namespace std;
 
 namespace SCML_SDL_gpu
 {
 
+static bool pathIsAbsolute(const std::string& path)
+{
+    #ifdef WIN32
+    if(path.size() < 3)
+        return false;
+    return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'))
+    #else
+    if(path.size() < 1)
+        return false;
+    return (path[0] == '/');
+    #endif
+    return false;
+}
 
 void FileSystem::load(SCML::Data* data)
 {
-    if(data == NULL)
+    if(data == NULL || data->name.size() == 0)
         return;
     
-    char buf[1000];
-    snprintf(buf, 1000, "%s", data->name.c_str());
-    string basedir = dirname(buf);
-    basedir += '/';
+    string basedir;
+    if(!pathIsAbsolute(data->name))
+    {
+        char buf[PATH_MAX];
+        snprintf(buf, PATH_MAX, "%s", data->name.c_str());
+        basedir = dirname(buf);
+        basedir += '/';
+        //realpath(basedir.c_str(), buf);
+        //basedir = buf;
+        if(basedir.size() > 0 && basedir[basedir.size()-1] != '/')
+            basedir += '/';
+    }
     
     for(map<int, SCML::Data::Folder*>::iterator e = data->folders.begin(); e != data->folders.end(); e++)
     {
