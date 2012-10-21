@@ -18,7 +18,7 @@ static bool pathIsAbsolute(const std::string& path)
     #ifdef WIN32
     if(path.size() < 3)
         return false;
-    return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'))
+    return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
     #else
     if(path.size() < 1)
         return false;
