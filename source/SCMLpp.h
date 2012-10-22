@@ -93,7 +93,61 @@ class Data
         };
     };
     
-    Meta_Data meta_data;
+
+    class Meta_Data_Tweenable
+    {
+        public:
+        
+        class Variable;
+        std::map<std::string, Variable*> variables;
+        class Tag;
+        std::map<std::string, Tag*> tags;
+        
+        Meta_Data_Tweenable();
+        Meta_Data_Tweenable(TiXmlElement* elem);
+        
+        bool load(TiXmlElement* elem);
+        void log(int recursive_depth = 0) const;
+        void clear();
+        
+        class Variable
+        {
+            public:
+            
+            std::string name;
+            std::string type;
+            std::string value_string;
+            int value_int;
+            float value_float;
+            std::string curve_type;
+            float c1;
+            float c2;
+            
+            Variable();
+            Variable(TiXmlElement* elem);
+            
+            bool load(TiXmlElement* elem);
+            void log(int recursive_depth = 0) const;
+            void clear();
+            
+        };
+        
+        class Tag
+        {
+            public:
+            
+            std::string name;
+            
+            Tag();
+            Tag(TiXmlElement* elem);
+            
+            bool load(TiXmlElement* elem);
+            void log(int recursive_depth = 0) const;
+            void clear();
+        };
+    };
+    
+    Meta_Data* meta_data;
 
     class Folder
     {
@@ -210,7 +264,7 @@ class Data
         void log(int recursive_depth = 0) const;
         void clear();
         
-        // TODO: Meta_Data goes here, but what does it contain?
+        Meta_Data* meta_data;
 
         class Animation
         {
@@ -221,6 +275,8 @@ class Data
             int length;
             std::string looping;
             int loop_to;
+            
+            Meta_Data* meta_data;
             
             // More to follow...
             class Mainline
@@ -243,6 +299,7 @@ class Data
                     
                     int id;
                     int time;
+                    Meta_Data* meta_data;
                     
                     Key();
                     Key(TiXmlElement* elem);
@@ -256,7 +313,6 @@ class Data
                     class Object_Ref;
                     std::map<int, Object_Ref*> object_refs;
                     
-                    // TODO: Meta_Data goes here, but what does it contain?
                     
                     class Hierarchy
                     {
@@ -289,8 +345,8 @@ class Data
                             float g;
                             float b;
                             float a;
+                            Meta_Data* meta_data;
                             
-                            // TODO: Meta_Data goes here, but what does it contain?
                             
                             Bone();
                             Bone(TiXmlElement* elem);
@@ -365,6 +421,8 @@ class Data
                         float volume;
                         float panning;
                         
+                        Meta_Data* meta_data;
+                        
                         Object();
                         Object(TiXmlElement* elem);
                         
@@ -407,7 +465,6 @@ class Data
             void log(int recursive_depth = 0) const;
             void clear();
             
-            // TODO: Meta_Data goes here, but what does it contain?
             
             
             class Timeline
@@ -419,6 +476,7 @@ class Data
                 std::string object_type;
                 std::string variable_type;
                 std::string usage;
+                Meta_Data* meta_data;
                 
                 Timeline();
                 Timeline(TiXmlElement* elem);
@@ -450,44 +508,8 @@ class Data
                     void log(int recursive_depth = 0) const;
                     void clear();
                     
-                    class Meta_Data
-                    {
-                        public:
-                        
-                        class Variable;
-                        std::map<std::string, Variable*> variables;
-                        
-                        Meta_Data();
-                        Meta_Data(TiXmlElement* elem);
-                        
-                        bool load(TiXmlElement* elem);
-                        void log(int recursive_depth = 0) const;
-                        void clear();
-                        
-                        class Variable
-                        {
-                            public:
-                            
-                            std::string name;
-                            std::string type;
-                            std::string value_string;
-                            int value_int;
-                            float value_float;
-                            std::string curve_type;
-                            float c1;
-                            float c2;
-                            
-                            Variable();
-                            Variable(TiXmlElement* elem);
-                            
-                            bool load(TiXmlElement* elem);
-                            void log(int recursive_depth = 0) const;
-                            void clear();
-                            
-                        };
-                    };
                     
-                    Meta_Data meta_data;
+                    Meta_Data_Tweenable* meta_data;
                 
                     class Bone
                     {
@@ -502,8 +524,7 @@ class Data
                         float g;
                         float b;
                         float a;
-                        
-                        // TODO: Meta_Data goes here, but what does it contain?
+                        Meta_Data_Tweenable* meta_data;
                         
                         Bone();
                         Bone(TiXmlElement* elem);
@@ -553,6 +574,7 @@ class Data
                         //int z_index; // Does this exist?  Object_Ref has it, so probably not.
                         float volume;
                         float panning;
+                        Meta_Data_Tweenable* meta_data;
                         
                         Object();
                         Object(TiXmlElement* elem);
@@ -561,7 +583,6 @@ class Data
                         void log(int recursive_depth = 0) const;
                         void clear();
                         
-                        // TODO: Meta_Data goes here, but what does it contain?
                     };
                     
                     Object object;

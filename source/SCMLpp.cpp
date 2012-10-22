@@ -25,23 +25,23 @@ static void log(const char* formatted_text, ...)
 
 
 Data::Data()
-    : pixel_art_mode(false)
+    : pixel_art_mode(false), meta_data(NULL)
 {}
 
 Data::Data(const char* file)
-    : pixel_art_mode(false)
+    : pixel_art_mode(false), meta_data(NULL)
 {
     load(file);
 }
 
 Data::Data(TiXmlElement* elem)
-    : pixel_art_mode(false)
+    : pixel_art_mode(false), meta_data(NULL)
 {
     load(elem);
 }
 
 Data::Data(const Data& copy)
-    : scml_version(copy.scml_version), generator(copy.generator), generator_version(copy.generator_version), pixel_art_mode(copy.pixel_art_mode)
+    : scml_version(copy.scml_version), generator(copy.generator), generator_version(copy.generator_version), pixel_art_mode(copy.pixel_art_mode), meta_data(NULL)
 {
     clone(copy, true);
 }
@@ -110,7 +110,11 @@ bool Data::load(TiXmlElement* elem)
     
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
     if(meta_data_child != NULL)
-        meta_data.load(meta_data_child);
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
     
     for(TiXmlElement* child = elem->FirstChildElement("folder"); child != NULL; child = child->NextSiblingElement("folder"))
     {
@@ -201,7 +205,8 @@ void Data::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
-    meta_data.log(recursive_depth - 1);
+    if(meta_data != NULL)
+        meta_data->log(recursive_depth - 1);
     
     for(map<int, Folder*>::const_iterator e = folders.begin(); e != folders.end(); e++)
     {
@@ -238,7 +243,8 @@ void Data::clear()
     generator_version = "(1.0)";
     pixel_art_mode = false;
     
-    meta_data.clear();
+    delete meta_data;
+    meta_data = NULL;
     
     for(map<int, Folder*>::iterator e = folders.begin(); e != folders.end(); e++)
     {
@@ -871,11 +877,11 @@ void Data::Atlas::Folder::Image::clear()
 
 
 Data::Entity::Entity()
-    : id(0)
+    : id(0), meta_data(NULL)
 {}
 
 Data::Entity::Entity(TiXmlElement* elem)
-    : id(0)
+    : id(0), meta_data(NULL)
 {
     load(elem);
 }
@@ -884,6 +890,14 @@ bool Data::Entity::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
     name = xmlGetStringAttr(elem, "name", "");
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
     
     for(TiXmlElement* child = elem->FirstChildElement("animation"); child != NULL; child = child->NextSiblingElement("animation"))
     {
@@ -914,6 +928,12 @@ void Data::Entity::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
+    
     for(map<int, Animation*>::const_iterator e = animations.begin(); e != animations.end(); e++)
     {
         SCML::log("Animation:\n");
@@ -926,6 +946,8 @@ void Data::Entity::clear()
 {
     id = 0;
     name.clear();
+    delete meta_data;
+    meta_data = NULL;
     
     for(map<int, Animation*>::iterator e = animations.begin(); e != animations.end(); e++)
     {
@@ -943,11 +965,11 @@ void Data::Entity::clear()
 
 
 Data::Entity::Animation::Animation()
-    : id(0), length(0), looping("true"), loop_to(0)
+    : id(0), length(0), looping("true"), loop_to(0), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Animation(TiXmlElement* elem)
-    : id(0), length(0), looping("true"), loop_to(0)
+    : id(0), length(0), looping("true"), loop_to(0), meta_data(NULL)
 {
     load(elem);
 }
@@ -959,6 +981,14 @@ bool Data::Entity::Animation::load(TiXmlElement* elem)
     length = xmlGetIntAttr(elem, "length", 0);
     looping = xmlGetStringAttr(elem, "looping", "");
     loop_to = xmlGetIntAttr(elem, "loop_to", 0);
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
     
     TiXmlElement* mainline_elem = elem->FirstChildElement("mainline");
     if(mainline_elem == NULL || !mainline.load(mainline_elem))
@@ -999,6 +1029,12 @@ void Data::Entity::Animation::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
+    
     mainline.log(recursive_depth - 1);
     
     for(map<int, Timeline*>::const_iterator e = timelines.begin(); e != timelines.end(); e++)
@@ -1016,6 +1052,9 @@ void Data::Entity::Animation::clear()
     length = 0;
     looping = "true";
     loop_to = 0;
+    
+    delete meta_data;
+    meta_data = NULL;
     
     mainline.clear();
     
@@ -1095,11 +1134,11 @@ void Data::Entity::Animation::Mainline::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Key()
-    : id(0), time(0)
+    : id(0), time(0), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Mainline::Key::Key(TiXmlElement* elem)
-    : id(0), time(0)
+    : id(0), time(0), meta_data(NULL)
 {
     load(elem);
 }
@@ -1108,6 +1147,14 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
     time = xmlGetIntAttr(elem, "time", 0);
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
     
     TiXmlElement* hierarchy_child = elem->FirstChildElement("hierarchy");
     if(hierarchy_child != NULL && !hierarchy.load(hierarchy_child))
@@ -1162,6 +1209,12 @@ void Data::Entity::Animation::Mainline::Key::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
+    
     hierarchy.log(recursive_depth - 1);
     
     for(map<int, Object*>::const_iterator e = objects.begin(); e != objects.end(); e++)
@@ -1182,6 +1235,9 @@ void Data::Entity::Animation::Mainline::Key::clear()
 {
     id = 0;
     time = 0;
+    
+    delete meta_data;
+    meta_data = NULL;
     
     hierarchy.clear();
     
@@ -1295,11 +1351,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone()
-    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f)
+    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone(TiXmlElement* elem)
-    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f)
+    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -1318,6 +1374,14 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::load(TiXmlElement*
     b = xmlGetFloatAttr(elem, "b", 1.0f);
     a = xmlGetFloatAttr(elem, "a", 1.0f);
     
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
+    
     return true;
 }
 
@@ -1335,6 +1399,14 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log(int recursive_
     SCML::log("b=%f\n", b);
     SCML::log("a=%f\n", a);
     
+    if(recursive_depth == 0)
+        return;
+    
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
 }
 
 void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
@@ -1350,6 +1422,9 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
     g = 1.0f;
     b = 1.0f;
     a = 1.0f;
+    
+    delete meta_data;
+    meta_data = NULL;
 }
 
 
@@ -1404,11 +1479,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Object::Object()
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
+    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Mainline::Key::Object::Object(TiXmlElement* elem)
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f)
+    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -1464,6 +1539,14 @@ bool Data::Entity::Animation::Mainline::Key::Object::load(TiXmlElement* elem)
     {
         volume = xmlGetFloatAttr(elem, "volume", 1.0f);
         panning = xmlGetFloatAttr(elem, "panning", 0.0f);
+    }
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
     }
     
     return true;
@@ -1522,6 +1605,15 @@ void Data::Entity::Animation::Mainline::Key::Object::log(int recursive_depth) co
         SCML::log("panning=%f\n", panning);
     }
     // TODO: Remove stuff for object_types that don't need them
+    
+    if(recursive_depth == 0)
+        return;
+    
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
 }
 
 void Data::Entity::Animation::Mainline::Key::Object::clear()
@@ -1564,6 +1656,9 @@ void Data::Entity::Animation::Mainline::Key::Object::clear()
     z_index = 0;
     volume = 1.0f;
     panning = 0.0f;
+    
+    delete meta_data;
+    meta_data = NULL;
 }
 
 
@@ -1622,11 +1717,11 @@ void Data::Entity::Animation::Mainline::Key::Object_Ref::clear()
 
 
 Data::Entity::Animation::Timeline::Timeline()
-    : id(0), object_type("sprite"), variable_type("string"), usage("display")
+    : id(0), object_type("sprite"), variable_type("string"), usage("display"), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Timeline::Timeline(TiXmlElement* elem)
-    : id(0), object_type("sprite"), variable_type("string"), usage("display")
+    : id(0), object_type("sprite"), variable_type("string"), usage("display"), meta_data(NULL)
 {
     load(elem);
 }
@@ -1648,6 +1743,14 @@ bool Data::Entity::Animation::Timeline::load(TiXmlElement* elem)
         usage = xmlGetStringAttr(elem, "usage", "display");
     else if(object_type == "entity")
         usage = xmlGetStringAttr(elem, "usage", "display");
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data;
+        meta_data->load(meta_data_child);
+    }
     
     for(TiXmlElement* child = elem->FirstChildElement("key"); child != NULL; child = child->NextSiblingElement("key"))
     {
@@ -1681,6 +1784,12 @@ void Data::Entity::Animation::Timeline::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
+    
     for(map<int, Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
     {
         SCML::log("Key:\n");
@@ -1697,6 +1806,9 @@ void Data::Entity::Animation::Timeline::clear()
     variable_type = "string";
     usage = "display";
     
+    delete meta_data;
+    meta_data = NULL;
+    
     for(map<int, Key*>::iterator e = keys.begin(); e != keys.end(); e++)
     {
         delete e->second;
@@ -1711,11 +1823,11 @@ void Data::Entity::Animation::Timeline::clear()
 
 
 Data::Entity::Animation::Timeline::Key::Key()
-    : id(0), time(0), curve_type("linear"), c1(0.0f), c2(0.0f), spin(1)
+    : id(0), time(0), curve_type("linear"), c1(0.0f), c2(0.0f), spin(1), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Timeline::Key::Key(TiXmlElement* elem)
-    : id(0), time(0), curve_type("linear"), c1(0.0f), c2(0.0f), spin(1)
+    : id(0), time(0), curve_type("linear"), c1(0.0f), c2(0.0f), spin(1), meta_data(NULL)
 {
     load(elem);
 }
@@ -1730,13 +1842,17 @@ bool Data::Entity::Animation::Timeline::Key::load(TiXmlElement* elem)
     spin = xmlGetIntAttr(elem, "spin", 1);
     
     
-    TiXmlElement* child = elem->FirstChildElement("meta_data");
-    if(child != NULL)
-        meta_data.load(child);
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data_Tweenable;
+        meta_data->load(meta_data_child);
+    }
     
     has_object = true;
     
-    child = elem->FirstChildElement("bone");
+    TiXmlElement* child = elem->FirstChildElement("bone");
     if(child != NULL && !bone.load(child))
     {
         SCML::log("SCML::Data::Entity::Animation::Timeline::Key failed to load a bone.\n");
@@ -1765,8 +1881,11 @@ void Data::Entity::Animation::Timeline::Key::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
-    SCML::log("Meta_Data:\n");
-    meta_data.log(recursive_depth - 1);
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth - 1);
+    }
     if(has_object)
     {
         SCML::log("Object:\n");
@@ -1789,7 +1908,9 @@ void Data::Entity::Animation::Timeline::Key::clear()
     c2 = 0.0f;
     spin = 1;
     
-    meta_data.clear();
+    delete meta_data;
+    meta_data = NULL;
+    
     bone.clear();
     object.clear();
 }
@@ -1801,15 +1922,15 @@ void Data::Entity::Animation::Timeline::Key::clear()
 
 
 
-Data::Entity::Animation::Timeline::Key::Meta_Data::Meta_Data()
+Data::Meta_Data_Tweenable::Meta_Data_Tweenable()
 {}
 
-Data::Entity::Animation::Timeline::Key::Meta_Data::Meta_Data(TiXmlElement* elem)
+Data::Meta_Data_Tweenable::Meta_Data_Tweenable(TiXmlElement* elem)
 {
     load(elem);
 }
 
-bool Data::Entity::Animation::Timeline::Key::Meta_Data::load(TiXmlElement* elem)
+bool Data::Meta_Data_Tweenable::load(TiXmlElement* elem)
 {
     for(TiXmlElement* child = elem->FirstChildElement("variable"); child != NULL; child = child->NextSiblingElement("variable"))
     {
@@ -1818,13 +1939,13 @@ bool Data::Entity::Animation::Timeline::Key::Meta_Data::load(TiXmlElement* elem)
         {
             if(!variables.insert(make_pair(variable->name, variable)).second)
             {
-                SCML::log("SCML::Data::Entity::Animation::Timeline::Key::Meta_Data loaded a variable with a duplicate name (%s).\n", variable->name.c_str());
+                SCML::log("SCML::Data::Meta_Data_Tweenable loaded a variable with a duplicate name (%s).\n", variable->name.c_str());
                 delete variable;
             }
         }
         else
         {
-            SCML::log("SCML::Data::Entity::Animation::Timeline::Key::Meta_Data failed to load a variable.\n");
+            SCML::log("SCML::Data::Meta_Data_Tweenable failed to load a variable.\n");
             delete variable;
         }
     }
@@ -1832,7 +1953,7 @@ bool Data::Entity::Animation::Timeline::Key::Meta_Data::load(TiXmlElement* elem)
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::log(int recursive_depth) const
+void Data::Meta_Data_Tweenable::log(int recursive_depth) const
 {
     if(recursive_depth == 0)
         return;
@@ -1845,7 +1966,7 @@ void Data::Entity::Animation::Timeline::Key::Meta_Data::log(int recursive_depth)
     
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::clear()
+void Data::Meta_Data_Tweenable::clear()
 {
     for(map<std::string, Variable*>::iterator e = variables.begin(); e != variables.end(); e++)
     {
@@ -1861,17 +1982,17 @@ void Data::Entity::Animation::Timeline::Key::Meta_Data::clear()
 
 
 
-Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::Variable()
+Data::Meta_Data_Tweenable::Variable::Variable()
     : type("string"), value_int(0), value_float(0.0f), curve_type("linear"), c1(0.0f), c2(0.0f)
 {}
 
-Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::Variable(TiXmlElement* elem)
+Data::Meta_Data_Tweenable::Variable::Variable(TiXmlElement* elem)
     : type("string"), value_int(0), value_float(0.0f), curve_type("linear"), c1(0.0f), c2(0.0f)
 {
     load(elem);
 }
 
-bool Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::load(TiXmlElement* elem)
+bool Data::Meta_Data_Tweenable::Variable::load(TiXmlElement* elem)
 {
     type = xmlGetStringAttr(elem, "type", "string");
     if(type == "string")
@@ -1888,7 +2009,7 @@ bool Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::load(TiXmlElem
     return true;
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::log(int recursive_depth) const
+void Data::Meta_Data_Tweenable::Variable::log(int recursive_depth) const
 {
     SCML::log("type=%s\n", type.c_str());
     if(type == "string")
@@ -1904,7 +2025,7 @@ void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::log(int recurs
     
 }
 
-void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::clear()
+void Data::Meta_Data_Tweenable::Variable::clear()
 {
     type = "string";
     value_string.clear();
@@ -1924,11 +2045,11 @@ void Data::Entity::Animation::Timeline::Key::Meta_Data::Variable::clear()
 
 
 Data::Entity::Animation::Timeline::Key::Bone::Bone()
-    : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f)
+    : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Timeline::Key::Bone::Bone(TiXmlElement* elem)
-    : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f)
+    : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -1945,6 +2066,14 @@ bool Data::Entity::Animation::Timeline::Key::Bone::load(TiXmlElement* elem)
     b = xmlGetFloatAttr(elem, "b", 1.0f);
     a = xmlGetFloatAttr(elem, "a", 1.0f);
     
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data_Tweenable;
+        meta_data->load(meta_data_child);
+    }
+    
     return true;
 }
 
@@ -1960,6 +2089,15 @@ void Data::Entity::Animation::Timeline::Key::Bone::log(int recursive_depth) cons
     SCML::log("b=%f\n", b);
     SCML::log("a=%f\n", a);
     
+    if(recursive_depth == 0)
+        return;
+    
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
+    
 }
 
 void Data::Entity::Animation::Timeline::Key::Bone::clear()
@@ -1973,6 +2111,9 @@ void Data::Entity::Animation::Timeline::Key::Bone::clear()
     g = 1.0f;
     b = 1.0f;
     a = 1.0f;
+    
+    delete meta_data;
+    meta_data = NULL;
 }
 
 
@@ -1983,11 +2124,11 @@ void Data::Entity::Animation::Timeline::Key::Bone::clear()
 
 
 Data::Entity::Animation::Timeline::Key::Object::Object()
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Timeline::Key::Object::Object(TiXmlElement* elem)
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -2039,6 +2180,15 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
         panning = xmlGetFloatAttr(elem, "panning", 0.0f);
     }
     
+    
+    TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
+    if(meta_data_child != NULL)
+    {
+        if(meta_data == NULL)
+            meta_data = new Meta_Data_Tweenable;
+        meta_data->load(meta_data_child);
+    }
+    
     return true;
 }
 
@@ -2088,6 +2238,15 @@ void Data::Entity::Animation::Timeline::Key::Object::log(int recursive_depth) co
         SCML::log("panning=%f\n", panning);
     }
     // TODO: Remove stuff for object_types that don't need them
+    
+    if(recursive_depth == 0)
+        return;
+        
+    if(meta_data != NULL)
+    {
+        SCML::log("Meta_Data:\n");
+        meta_data->log(recursive_depth-1);
+    }
 }
 
 void Data::Entity::Animation::Timeline::Key::Object::clear()
