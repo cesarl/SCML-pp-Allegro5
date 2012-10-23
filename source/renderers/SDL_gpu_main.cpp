@@ -1,4 +1,5 @@
 #include "SCML_SDL_gpu.h"
+#include <vector>
 #include <list>
 
 using namespace std;
@@ -8,15 +9,23 @@ GPU_Target* screen = NULL;
 Uint8* keystates = NULL;
 
 
-void main_loop(SCML::Data* data)
+void main_loop()
 {
+    vector<string> data_files;
+    data_files.push_back("samples/monster/Example.SCML");
+    data_files.push_back("samples/knight/knight.scml");
+    
+    
+    size_t data_file_index = 0;
+    SCML::Data data(data_files[data_file_index]);
+    data.log();
     
     FileSystem fs;
-    fs.load(data);
+    fs.load(&data);
     printf("Loaded %zu images.\n", fs.images.size());
     
     list<Entity*> entities;
-    for(map<int, SCML::Data::Entity*>::iterator e = data->entities.begin(); e != data->entities.end(); e++)
+    for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
     {
         Entity* entity = new Entity(e->first);
         entity->setFileSystem(&fs);
@@ -51,8 +60,41 @@ void main_loop(SCML::Data* data)
                 {
                     for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
                     {
-                        (*e)->startAnimation(rand()%data->getNumAnimations((*e)->entity));
+                        (*e)->startAnimation(rand()%data.getNumAnimations((*e)->entity));
                     }
+                }
+                else if(event.key.keysym.sym == SDLK_RETURN)
+                {
+                    // Destroy all of our data
+                    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+                    {
+                        delete (*e);
+                    }
+                    entities.clear();
+                    
+                    fs.clear();
+                    data.clear();
+                    
+                    // Get next data file
+                    data_file_index++;
+                    if(data_file_index >= data_files.size())
+                        data_file_index = 0;
+                    
+                    // Load new data
+                    data.load(data_files[data_file_index]);
+                    data.log();
+                    
+                    fs.load(&data);
+                    printf("Loaded %zu images.\n", fs.images.size());
+                    
+                    for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
+                    {
+                        Entity* entity = new Entity(e->first);
+                        entity->setFileSystem(&fs);
+                        entity->setScreen(screen);
+                        entities.push_back(entity);
+                    }
+                    printf("Loaded %zu entities.\n", entities.size());
                 }
             }
         }
@@ -76,7 +118,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->update(data, dt_ms);
+            (*e)->update(&data, dt_ms);
         }
         
         GPU_Clear(screen);
@@ -84,7 +126,7 @@ void main_loop(SCML::Data* data)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(data, x, y, angle, scale, scale);
+            (*e)->draw(&data, x, y, angle, scale, scale);
         }
         
         
@@ -100,6 +142,9 @@ void main_loop(SCML::Data* data)
     {
         delete (*e);
     }
+    entities.clear();
+    
+    data.clear();
 }
 
 

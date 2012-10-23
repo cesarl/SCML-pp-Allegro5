@@ -40,12 +40,10 @@ void FileSystem::load(SCML::Data* data)
     string basedir;
     if(!pathIsAbsolute(data->name))
     {
+        // Create a relative directory name for the path's base
         char buf[PATH_MAX];
         snprintf(buf, PATH_MAX, "%s", data->name.c_str());
         basedir = dirname(buf);
-        basedir += '/';
-        //realpath(basedir.c_str(), buf);
-        //basedir = buf;
         if(basedir.size() > 0 && basedir[basedir.size()-1] != '/')
             basedir += '/';
     }
@@ -183,7 +181,7 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t);
             float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t);
             
-            // Is 'spin' what you are coming from (key1) or what you are going to (key2)?
+            // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
             float angle_i;
             if(t_key1->spin > 0 && obj2->angle - obj1->angle < 0.0f)
                 angle_i = lerp(obj1->angle, obj2->angle + 360, t);

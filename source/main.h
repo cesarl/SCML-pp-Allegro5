@@ -6,7 +6,7 @@
 bool init(unsigned int w, unsigned int h);
 void quit();
 
-void main_loop(SCML::Data* data);
+void main_loop();
 
 
 

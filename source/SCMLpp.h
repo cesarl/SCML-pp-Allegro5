@@ -29,13 +29,13 @@ class Data
     std::map<int, Character_Map*> character_maps;
     
     Data();
-    Data(const char* file);
+    Data(const std::string& file);
     Data(TiXmlElement* elem);
     Data(const Data& copy);
     Data& operator=(const Data& copy);
     ~Data();
     
-    bool load(const char* file);
+    bool load(const std::string& file);
     bool load(TiXmlElement* elem);
     Data& clone(const Data& copy, bool skip_base = false);
     void log(int recursive_depth = 0) const;
@@ -335,7 +335,7 @@ class Data
                             public:
                             
                             int id;
-                            int parent;
+                            int parent;  // a bone id
                             float x;
                             float y;
                             float angle;
@@ -362,7 +362,7 @@ class Data
                             public:
                             
                             int id;
-                            int parent;
+                            int parent;  // a bone id
                             int timeline;
                             int key;
                             
@@ -382,7 +382,7 @@ class Data
                         public:
                         
                         int id;
-                        int parent;
+                        int parent; // a bone id
                         std::string object_type;
                         int atlas;
                         int folder;
@@ -437,7 +437,7 @@ class Data
                         public:
                         
                         int id;
-                        int parent;
+                        int parent;  // a bone id
                         int timeline;
                         int key;
                         int z_index;

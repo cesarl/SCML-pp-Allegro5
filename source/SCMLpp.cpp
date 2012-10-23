@@ -28,7 +28,7 @@ Data::Data()
     : pixel_art_mode(false), meta_data(NULL)
 {}
 
-Data::Data(const char* file)
+Data::Data(const std::string& file)
     : pixel_art_mode(false), meta_data(NULL)
 {
     load(file);
@@ -72,15 +72,15 @@ Data::~Data()
     clear();
 }
 
-bool Data::load(const char* file)
+bool Data::load(const std::string& file)
 {
     name = file;
     
     TiXmlDocument doc;
 
-    if(!doc.LoadFile(file))
+    if(!doc.LoadFile(file.c_str()))
     {
-        SCML::log("SCML::Data failed to load: Couldn't open %s.\n", file);
+        SCML::log("SCML::Data failed to load: Couldn't open %s.\n", file.c_str());
         SCML::log("%s\n", doc.ErrorDesc());
         return false;
     }
@@ -88,7 +88,7 @@ bool Data::load(const char* file)
     TiXmlElement* root = doc.FirstChildElement("spriter_data");
     if(root == NULL)
     {
-        SCML::log("SCML::Data failed to load: No spriter_data XML element in %s.\n", file);
+        SCML::log("SCML::Data failed to load: No spriter_data XML element in %s.\n", file.c_str());
         return false;
     }
     
@@ -1351,11 +1351,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone()
-    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
+    : id(0), parent(-1), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone(TiXmlElement* elem)
-    : id(0), parent(0), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
+    : id(0), parent(-1), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -1363,7 +1363,7 @@ Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone(TiXmlElement* elem
 bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
-    parent = xmlGetIntAttr(elem, "parent", 0);
+    parent = xmlGetIntAttr(elem, "parent", -1);
     x = xmlGetFloatAttr(elem, "x", 0.0f);
     y = xmlGetFloatAttr(elem, "y", 0.0f);
     angle = xmlGetFloatAttr(elem, "angle", 0.0f);
@@ -1412,7 +1412,7 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log(int recursive_
 void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
 {
     id = 0;
-    parent = 0;
+    parent = -1;
     x = 0.0f;
     y = 0.0f;
     angle = 0.0f;
@@ -1435,11 +1435,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::Bone_Ref()
-    : id(0), parent(0), timeline(0), key(0)
+    : id(0), parent(-1), timeline(0), key(0)
 {}
 
 Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::Bone_Ref(TiXmlElement* elem)
-    : id(0), parent(0), timeline(0), key(0)
+    : id(0), parent(-1), timeline(0), key(0)
 {
     load(elem);
 }
@@ -1447,7 +1447,7 @@ Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::Bone_Ref(TiXmlEleme
 bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
-    parent = xmlGetIntAttr(elem, "parent", 0);
+    parent = xmlGetIntAttr(elem, "parent", -1);
     timeline = xmlGetIntAttr(elem, "timeline", 0);
     key = xmlGetIntAttr(elem, "key", 0);
     
@@ -1466,7 +1466,7 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::log(int recurs
 void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::clear()
 {
     id = 0;
-    parent = 0;
+    parent = -1;
     timeline = 0;
     key = 0;
 }
@@ -1479,11 +1479,11 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Object::Object()
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
+    : id(0), parent(-1), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Mainline::Key::Object::Object(TiXmlElement* elem)
-    : id(0), parent(0), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
+    : id(0), parent(-1), object_type("sprite"), atlas(0), folder(0), file(0), usage("display"), blend_mode("alpha"), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), pixel_art_mode_x(0), pixel_art_mode_y(0), pixel_art_mode_pivot_x(0), pixel_art_mode_pivot_y(0), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), variable_type("string"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), z_index(0), volume(1.0f), panning(0.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -1491,7 +1491,7 @@ Data::Entity::Animation::Mainline::Key::Object::Object(TiXmlElement* elem)
 bool Data::Entity::Animation::Mainline::Key::Object::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
-    parent = xmlGetIntAttr(elem, "parent", 0);
+    parent = xmlGetIntAttr(elem, "parent", -1);
     object_type = xmlGetStringAttr(elem, "object_type", "sprite");
     atlas = xmlGetIntAttr(elem, "atlas", 0);
     folder = xmlGetIntAttr(elem, "folder", 0);
@@ -1619,7 +1619,7 @@ void Data::Entity::Animation::Mainline::Key::Object::log(int recursive_depth) co
 void Data::Entity::Animation::Mainline::Key::Object::clear()
 {
     id = 0;
-    parent = 0;
+    parent = -1;
     object_type = "sprite";
     atlas = 0;
     folder = 0;
@@ -1669,11 +1669,11 @@ void Data::Entity::Animation::Mainline::Key::Object::clear()
 
 
 Data::Entity::Animation::Mainline::Key::Object_Ref::Object_Ref()
-    : id(0), parent(0), timeline(0), key(0), z_index(0)
+    : id(0), parent(-1), timeline(0), key(0), z_index(0)
 {}
 
 Data::Entity::Animation::Mainline::Key::Object_Ref::Object_Ref(TiXmlElement* elem)
-    : id(0), parent(0), timeline(0), key(0), z_index(0)
+    : id(0), parent(-1), timeline(0), key(0), z_index(0)
 {
     load(elem);
 }
@@ -1681,7 +1681,7 @@ Data::Entity::Animation::Mainline::Key::Object_Ref::Object_Ref(TiXmlElement* ele
 bool Data::Entity::Animation::Mainline::Key::Object_Ref::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
-    parent = xmlGetIntAttr(elem, "parent", 0);
+    parent = xmlGetIntAttr(elem, "parent", -1);
     timeline = xmlGetIntAttr(elem, "timeline", 0);
     key = xmlGetIntAttr(elem, "key", 0);
     z_index = xmlGetIntAttr(elem, "z_index", 0);
@@ -1702,7 +1702,7 @@ void Data::Entity::Animation::Mainline::Key::Object_Ref::log(int recursive_depth
 void Data::Entity::Animation::Mainline::Key::Object_Ref::clear()
 {
     id = 0;
-    parent = 0;
+    parent = -1;
     timeline = 0;
     key = 0;
     z_index = 0;
