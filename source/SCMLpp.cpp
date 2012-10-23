@@ -1156,11 +1156,42 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         meta_data->load(meta_data_child);
     }
     
-    TiXmlElement* hierarchy_child = elem->FirstChildElement("hierarchy");
-    if(hierarchy_child != NULL && !hierarchy.load(hierarchy_child))
+    for(TiXmlElement* child = elem->FirstChildElement("bone"); child != NULL; child = child->NextSiblingElement("bone"))
     {
-        SCML::log("SCML::Data::Entity::Animation::Mainline::Key failed to load the hierarchy.\n");
+        Bone* bone = new Bone;
+        if(bone->load(child))
+        {
+            if(!bones.insert(make_pair(bone->id, bone)).second)
+            {
+                SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded a bone with a duplicate id (%d).\n", bone->id);
+                delete bone;
+            }
+        }
+        else
+        {
+            SCML::log("SCML::Data::Entity::Animation::Mainline::Key failed to load a bone.\n");
+            delete bone;
+        }
     }
+    
+    for(TiXmlElement* child = elem->FirstChildElement("bone_ref"); child != NULL; child = child->NextSiblingElement("bone_ref"))
+    {
+        Bone_Ref* bone_ref = new Bone_Ref;
+        if(bone_ref->load(child))
+        {
+            if(!bone_refs.insert(make_pair(bone_ref->id, bone_ref)).second)
+            {
+                SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded a bone_ref with a duplicate id (%d).\n", bone_ref->id);
+                delete bone_ref;
+            }
+        }
+        else
+        {
+            SCML::log("SCML::Data::Entity::Animation::Mainline::Key failed to load a bone_ref.\n");
+            delete bone_ref;
+        }
+    }
+    
     
     for(TiXmlElement* child = elem->FirstChildElement("object"); child != NULL; child = child->NextSiblingElement("object"))
     {
@@ -1215,7 +1246,17 @@ void Data::Entity::Animation::Mainline::Key::log(int recursive_depth) const
         meta_data->log(recursive_depth-1);
     }
     
-    hierarchy.log(recursive_depth - 1);
+    for(map<int, Bone*>::const_iterator e = bones.begin(); e != bones.end(); e++)
+    {
+        SCML::log("Bone:\n");
+        e->second->log(recursive_depth - 1);
+    }
+    
+    for(map<int, Bone_Ref*>::const_iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    {
+        SCML::log("Bone_Ref:\n");
+        e->second->log(recursive_depth - 1);
+    }
     
     for(map<int, Object*>::const_iterator e = objects.begin(); e != objects.end(); e++)
     {
@@ -1239,7 +1280,16 @@ void Data::Entity::Animation::Mainline::Key::clear()
     delete meta_data;
     meta_data = NULL;
     
-    hierarchy.clear();
+    for(map<int, Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    {
+        delete e->second;
+    }
+    bones.clear();
+    for(map<int, Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    bone_refs.clear();
     
     for(map<int, Object*>::iterator e = objects.begin(); e != objects.end(); e++)
     {
@@ -1261,106 +1311,19 @@ void Data::Entity::Animation::Mainline::Key::clear()
 
 
 
-Data::Entity::Animation::Mainline::Key::Hierarchy::Hierarchy()
-{}
-
-Data::Entity::Animation::Mainline::Key::Hierarchy::Hierarchy(TiXmlElement* elem)
-{
-    load(elem);
-}
-
-bool Data::Entity::Animation::Mainline::Key::Hierarchy::load(TiXmlElement* elem)
-{
-    for(TiXmlElement* child = elem->FirstChildElement("bone"); child != NULL; child = child->NextSiblingElement("bone"))
-    {
-        Bone* bone = new Bone;
-        if(bone->load(child))
-        {
-            if(!bones.insert(make_pair(bone->id, bone)).second)
-            {
-                SCML::log("SCML::Data::Entity::Animation::Mainline::Key::Hierarchy loaded a bone with a duplicate id (%d).\n", bone->id);
-                delete bone;
-            }
-        }
-        else
-        {
-            SCML::log("SCML::Data::Entity::Animation::Mainline::Key::Hierarchy failed to load a bone.\n");
-            delete bone;
-        }
-    }
-    
-    for(TiXmlElement* child = elem->FirstChildElement("bone_ref"); child != NULL; child = child->NextSiblingElement("bone_ref"))
-    {
-        Bone_Ref* bone_ref = new Bone_Ref;
-        if(bone_ref->load(child))
-        {
-            if(!bone_refs.insert(make_pair(bone_ref->id, bone_ref)).second)
-            {
-                SCML::log("SCML::Data::Entity::Animation::Mainline::Key::Hierarchy loaded a bone_ref with a duplicate id (%d).\n", bone_ref->id);
-                delete bone_ref;
-            }
-        }
-        else
-        {
-            SCML::log("SCML::Data::Entity::Animation::Mainline::Key::Hierarchy failed to load a bone_ref.\n");
-            delete bone_ref;
-        }
-    }
-    
-    return true;
-}
-
-void Data::Entity::Animation::Mainline::Key::Hierarchy::log(int recursive_depth) const
-{
-    if(recursive_depth == 0)
-        return;
-        
-    for(map<int, Bone*>::const_iterator e = bones.begin(); e != bones.end(); e++)
-    {
-        SCML::log("Bone:\n");
-        e->second->log(recursive_depth - 1);
-    }
-    
-    for(map<int, Bone_Ref*>::const_iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
-    {
-        SCML::log("Bone_Ref:\n");
-        e->second->log(recursive_depth - 1);
-    }
-    
-}
-
-void Data::Entity::Animation::Mainline::Key::Hierarchy::clear()
-{
-    for(map<int, Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
-    {
-        delete e->second;
-    }
-    bones.clear();
-    for(map<int, Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    bone_refs.clear();
-}
 
 
-
-
-
-
-
-
-Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone()
+Data::Entity::Animation::Mainline::Key::Bone::Bone()
     : id(0), parent(-1), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {}
 
-Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::Bone(TiXmlElement* elem)
+Data::Entity::Animation::Mainline::Key::Bone::Bone(TiXmlElement* elem)
     : id(0), parent(-1), x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), meta_data(NULL)
 {
     load(elem);
 }
 
-bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::load(TiXmlElement* elem)
+bool Data::Entity::Animation::Mainline::Key::Bone::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
     parent = xmlGetIntAttr(elem, "parent", -1);
@@ -1385,7 +1348,7 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::load(TiXmlElement*
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log(int recursive_depth) const
+void Data::Entity::Animation::Mainline::Key::Bone::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1409,7 +1372,7 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::log(int recursive_
     }
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
+void Data::Entity::Animation::Mainline::Key::Bone::clear()
 {
     id = 0;
     parent = -1;
@@ -1434,17 +1397,17 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone::clear()
 
 
 
-Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::Bone_Ref()
+Data::Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref()
     : id(0), parent(-1), timeline(0), key(0)
 {}
 
-Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::Bone_Ref(TiXmlElement* elem)
+Data::Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref(TiXmlElement* elem)
     : id(0), parent(-1), timeline(0), key(0)
 {
     load(elem);
 }
 
-bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::load(TiXmlElement* elem)
+bool Data::Entity::Animation::Mainline::Key::Bone_Ref::load(TiXmlElement* elem)
 {
     id = xmlGetIntAttr(elem, "id", 0);
     parent = xmlGetIntAttr(elem, "parent", -1);
@@ -1454,7 +1417,7 @@ bool Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::load(TiXmlElem
     return true;
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::log(int recursive_depth) const
+void Data::Entity::Animation::Mainline::Key::Bone_Ref::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
@@ -1463,7 +1426,7 @@ void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::log(int recurs
     
 }
 
-void Data::Entity::Animation::Mainline::Key::Hierarchy::Bone_Ref::clear()
+void Data::Entity::Animation::Mainline::Key::Bone_Ref::clear()
 {
     id = 0;
     parent = -1;

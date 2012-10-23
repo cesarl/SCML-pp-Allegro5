@@ -312,70 +312,55 @@ class Data
                     std::map<int, Object*> objects;
                     class Object_Ref;
                     std::map<int, Object_Ref*> object_refs;
+                        
+                    class Bone;
+                    std::map<int, Bone*> bones;
+                    class Bone_Ref;
+                    std::map<int, Bone_Ref*> bone_refs;
                     
-                    
-                    class Hierarchy
+                    class Bone
                     {
                         public:
-                    
-                        Hierarchy();
-                        Hierarchy(TiXmlElement* elem);
+                        
+                        int id;
+                        int parent;  // a bone id
+                        float x;
+                        float y;
+                        float angle;
+                        float scale_x;
+                        float scale_y;
+                        float r;
+                        float g;
+                        float b;
+                        float a;
+                        Meta_Data* meta_data;
+                        
+                        
+                        Bone();
+                        Bone(TiXmlElement* elem);
                         
                         bool load(TiXmlElement* elem);
                         void log(int recursive_depth = 0) const;
                         void clear();
                         
-                        class Bone;
-                        std::map<int, Bone*> bones;
-                        class Bone_Ref;
-                        std::map<int, Bone_Ref*> bone_refs;
-                        
-                        class Bone
-                        {
-                            public:
-                            
-                            int id;
-                            int parent;  // a bone id
-                            float x;
-                            float y;
-                            float angle;
-                            float scale_x;
-                            float scale_y;
-                            float r;
-                            float g;
-                            float b;
-                            float a;
-                            Meta_Data* meta_data;
-                            
-                            
-                            Bone();
-                            Bone(TiXmlElement* elem);
-                            
-                            bool load(TiXmlElement* elem);
-                            void log(int recursive_depth = 0) const;
-                            void clear();
-                            
-                        };
-                        
-                        class Bone_Ref
-                        {
-                            public:
-                            
-                            int id;
-                            int parent;  // a bone id
-                            int timeline;
-                            int key;
-                            
-                            Bone_Ref();
-                            Bone_Ref(TiXmlElement* elem);
-                            
-                            bool load(TiXmlElement* elem);
-                            void log(int recursive_depth = 0) const;
-                            void clear();
-                        };
                     };
                     
-                    Hierarchy hierarchy;
+                    class Bone_Ref
+                    {
+                        public:
+                        
+                        int id;
+                        int parent;  // a bone id
+                        int timeline;
+                        int key;
+                        
+                        Bone_Ref();
+                        Bone_Ref(TiXmlElement* elem);
+                        
+                        bool load(TiXmlElement* elem);
+                        void log(int recursive_depth = 0) const;
+                        void clear();
+                    };
                         
                     class Object
                     {
