@@ -116,6 +116,158 @@ GPU_Target* Entity::setScreen(GPU_Target* scr)
 
 
 
+class Vector3
+{
+    public:
+    float data[3];
+    
+    Vector3();
+    Vector3(float a, float b, float c);
+    
+    float operator[](int index) const;
+};
+
+Vector3::Vector3()
+{
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 0;
+}
+
+Vector3::Vector3(float a, float b, float c)
+{
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+}
+
+float Vector3::operator[](int index) const
+{
+    return data[index];
+}
+
+class Matrix3x3
+{
+    public:
+    
+    // Column-major: index = row + column*numColumns
+    float data[9];
+    
+    Matrix3x3();
+    Matrix3x3(float a11, float a12, float a13, float a21, float a22, float a23, float a31, float a32, float a33);
+    Matrix3x3(const Matrix3x3& matrix);
+    
+    static const Matrix3x3& getIdentity();
+    
+    float get(int row, int column) const;
+    
+    // Post-multiply operations
+    void scale(float scale_x, float scale_y);
+    void translate(float dx, float dy);
+    void rotate(float radians);
+};
+
+Matrix3x3::Matrix3x3()
+{
+    for(int i = 0; i < 9; i++)
+        data[i] = 0;
+}
+
+Matrix3x3::Matrix3x3(float a11, float a12, float a13, float a21, float a22, float a23, float a31, float a32, float a33)
+{
+    data[0] = a11;
+    data[1] = a21;
+    data[2] = a31;
+    data[3] = a12;
+    data[4] = a22;
+    data[5] = a32;
+    data[6] = a13;
+    data[7] = a23;
+    data[8] = a33;
+}
+
+Matrix3x3::Matrix3x3(const Matrix3x3& matrix)
+{
+    memcpy(data, matrix.data, sizeof(float)*9);
+}
+
+
+const Matrix3x3& Matrix3x3::getIdentity()
+{
+    static const Matrix3x3 identity(1,0,0,0,1,0,0,0,1);
+    return identity;
+}
+
+float Matrix3x3::get(int row, int column) const
+{
+    return data[row + column*3];
+}
+
+
+Matrix3x3 multiply(const Matrix3x3& A, const Matrix3x3& B)
+{
+    return Matrix3x3(A.get(0,0)*B.get(0,0) + A.get(0,1)*B.get(1,0) + A.get(0,2)*B.get(2,0),
+                     A.get(0,0)*B.get(0,1) + A.get(0,1)*B.get(1,1) + A.get(0,2)*B.get(2,1),
+                     A.get(0,0)*B.get(0,2) + A.get(0,1)*B.get(1,2) + A.get(0,2)*B.get(2,2),
+                     
+                     A.get(1,0)*B.get(0,0) + A.get(1,1)*B.get(1,0) + A.get(1,2)*B.get(2,0),
+                     A.get(1,0)*B.get(0,1) + A.get(1,1)*B.get(1,1) + A.get(1,2)*B.get(2,1),
+                     A.get(1,0)*B.get(0,2) + A.get(1,1)*B.get(1,2) + A.get(1,2)*B.get(2,2),
+                     
+                     A.get(2,0)*B.get(0,0) + A.get(2,1)*B.get(1,0) + A.get(2,2)*B.get(2,0),
+                     A.get(2,0)*B.get(0,1) + A.get(2,1)*B.get(1,1) + A.get(2,2)*B.get(2,1),
+                     A.get(2,0)*B.get(0,2) + A.get(2,1)*B.get(1,2) + A.get(2,2)*B.get(2,2)
+                     );
+}
+
+// Post-multiply
+void Matrix3x3::scale(float scale_x, float scale_y)
+{
+	data[0] *= scale_x;
+	data[1] *= scale_x;
+	data[2] *= scale_x;
+	data[3] *= scale_y;
+	data[4] *= scale_y;
+	data[5] *= scale_y;
+}
+
+void Matrix3x3::translate(float dx, float dy)
+{
+	data[6] += data[0]*dx + data[3]*dy;
+	data[7] += data[1]*dx + data[4]*dy;
+	data[8] += data[2]*dx + data[5]*dy;
+}
+
+void Matrix3x3::rotate(float radians)
+{
+	float cosT = cos(radians);
+	float sinT = sin(radians);
+	float a = data[0];
+	float b = data[3];
+	float d = data[1];
+	float e = data[4];
+	float g = data[2];
+	float h = data[5];
+	data[0] = a*cosT+b*sinT;
+	data[1] = d*cosT+e*sinT;
+	data[2] = g*cosT+h*sinT;
+	data[3] = -a*sinT+b*cosT;
+	data[4] = -d*sinT+e*cosT;
+	data[5] = -g*sinT+h*cosT;
+}
+
+/*
+a11 a12 a13    v1           a11*v1 + a12*v2 + a13*v3
+a21 a22 a23    v2     =     a21*v1 + a22*v2 + a23*v3
+a31 a32 a33    v3           a31*v1 + a32*v2 + a33*v3
+*/
+Vector3 multiply(const Matrix3x3& A, const Vector3& v)
+{
+    return Vector3(A.get(0,0)*v[0] + A.get(0,1)*v[1] + A.get(0,2)*v[2],
+                   A.get(1,0)*v[0] + A.get(1,1)*v[1] + A.get(1,2)*v[2],
+                   A.get(2,0)*v[0] + A.get(2,1)*v[1] + A.get(2,2)*v[2]
+                   );
+}
 
 inline float lerp(float a, float b, float t)
 {
@@ -178,8 +330,8 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             if(t_key2->time != t_key1->time)
                 t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
             
-            float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t);
-            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t);
+            float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t)*img->w;
+            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t)*img->h;
             
             // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
             float angle_i;
@@ -193,20 +345,30 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
             
             // Move image to draw from and rotate about the pivot point (SDL_gpu draws images at their center point)
-            float offset_x = (-pivot_x*img->w + img->w/2)*scale_x;
-            float offset_y = (pivot_y*img->h - img->h/2)*scale_y;
+            float offset_x = (-pivot_x + img->w/2);
+            float offset_y = (pivot_y - img->h/2);
             
-            // Rotation of the relative object position
-            float r_x = lerp(obj1->x, obj2->x, t)*scale_x;
-            float r_y = lerp(-obj1->y, -obj2->y, t)*scale_y;
-            float c = cos(angle*M_PI/180.0f);
-            float s = sin(angle*M_PI/180.0f);
+            // Relative object position
+            float r_x = lerp(obj1->x, obj2->x, t);
+            float r_y = lerp(-obj1->y, -obj2->y, t);
             
-            GPU_BlitTransformX(img, NULL, screen, x + offset_x + (r_x*c - r_y*s), y + offset_y + (r_x*s + r_y*c), -offset_x, -offset_y, -angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
-        
+            // Push it all through a matrix
+            Matrix3x3 mat = Matrix3x3::getIdentity();
+            mat.translate(x, y);
+            mat.rotate(angle*M_PI/180);
+            mat.scale(scale_x, scale_y);
+            mat.translate(r_x, r_y);
+            mat.rotate(-angle_i*M_PI/180);
+            mat.scale(scale_x_i, scale_y_i);
+            mat.translate(offset_x, offset_y);
+            
+            GPU_BlitTransformMatrix(img, NULL, screen, 0, 0, mat.data);
+            
             // debug draw pivot
-            //SDL_Color red = {255, 0, 0, 255};
-            //GPU_CircleFilled(screen, x + offset_x + (r_x*c - r_y*s), y + offset_y + (r_x*s + r_y*c), 3, red);
+            /*Vector3 v(0, 0, 1);
+            v = multiply(mat, v);
+            SDL_Color red = {255, 0, 0, 255};
+            GPU_CircleFilled(screen, v[0], v[1], 3, red);*/
         }
         
         e1++;
