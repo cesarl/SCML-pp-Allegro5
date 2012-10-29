@@ -121,7 +121,7 @@ void main_loop()
             (*e)->update(&data, dt_ms);
         }
         
-        GPU_Clear(screen);
+        GPU_ClearRGBA(screen, 255, 255, 255, 255);
         
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)

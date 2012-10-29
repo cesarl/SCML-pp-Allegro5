@@ -415,15 +415,24 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             
             
             // Get parent bone hierarchy
-            list<SCML::Data::Entity::Animation::Timeline::Key::Bone*> parents;
+            list<SCML::Data::Entity::Animation::Timeline::Key*> parents1;
+            list<SCML::Data::Entity::Animation::Timeline::Key*> parents2;
             // Go through all the parents
-            for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, key, e1->second->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, key, bone_ref->parent))
+            for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, e1->second->key, e1->second->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, e1->second->key, bone_ref->parent))
             {
-                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone = data->getTimelineBone(entity, animation, bone_ref->timeline, bone_ref->key);
-                if(bone == NULL)
+                SCML::Data::Entity::Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
+                if(k == NULL || k->has_object)
                     break;
                 
-                parents.push_front(bone);
+                parents1.push_front(k);
+            }
+            for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, e2->second->key, e2->second->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, e2->second->key, bone_ref->parent))
+            {
+                SCML::Data::Entity::Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
+                if(k == NULL || k->has_object)
+                    break;
+                
+                parents2.push_front(k);
             }
             
             
@@ -435,41 +444,54 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             float parent_angle = 0.0f;
             float parent_scale_x = 1.0f;
             float parent_scale_y = 1.0f;
-            for(list<SCML::Data::Entity::Animation::Timeline::Key::Bone*>::iterator e = parents.begin(); e != parents.end(); e++)
+            list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key1 = parents1.begin();
+            list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key2 = parents2.begin();
+            
+            while(b_key1 != parents1.end() && b_key2 != parents2.end())
             {
-                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone = *e;
+                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone1 = &(*b_key1)->bone;
+                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone2 = &(*b_key2)->bone;
                 
                 // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
                 // However, the positioning is affected by rotation.
                 
-                float bx = bone->x * parent_scale_x;
-                float by = -bone->y * parent_scale_y;
+                float bx = lerp(bone1->x, bone2->x, t) * parent_scale_x;
+                float by = -lerp(bone1->y, bone2->y, t) * parent_scale_y;
                 rotate_point(bx, by, parent_angle, parent_x, parent_y);
                 
-                parent_angle += 360-bone->angle;
+                float angle_b;
+                if((*b_key1)->spin > 0 && bone2->angle - bone1->angle < 0.0f)
+                    angle_b = lerp(bone1->angle, bone2->angle + 360, t);
+                else if((*b_key1)->spin < 0 && bone2->angle - bone1->angle > 0.0f)
+                    angle_b = lerp(bone1->angle, bone2->angle - 360, t);
+                else
+                    angle_b = lerp(bone1->angle, bone2->angle, t);
+                
+                parent_angle += 360-angle_b;
                 parent_x = bx;
                 parent_y = by;
-                GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
+                /*GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
                 GPU_Circle(screen, x + bx, y + by, 5, blue);
                 printf("bone bxy: %.0f, %.0f\n", bx, by);
-                printf("bone xy: %.0f, %.0f\n", bone->x, -bone->y);
-                printf("bone angle: %.0f\n", bone->angle);
-                parent_scale_x *= bone->scale_x;
-                parent_scale_y *= bone->scale_y;
+                printf("bone xy: %.0f, %.0f\n", bone1->x, -bone1->y);
+                printf("bone angle: %.0f\n", bone1->angle);*/
+                parent_scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
+                parent_scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
                 
+                b_key1++;
+                b_key2++;
             }
             
             
-            printf("parent xy: %.0f, %.0f\n", parent_x, parent_y);
-            printf("parent angle: %.0f\n", parent_angle);
+            //printf("parent xy: %.0f, %.0f\n", parent_x, parent_y);
+            //printf("parent angle: %.0f\n", parent_angle);
             r_x *= parent_scale_x;
             r_y *= parent_scale_y;
             angle_i += parent_angle;
             rotate_point(r_x, r_y, parent_angle, parent_x, parent_y);
             
-            SDL_Color orange = {255, 168, 0, 255};
-            GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);
-            //GPU_Circle(screen, x + r_x, y + r_y, 5, blue);
+            //SDL_Color orange = {255, 168, 0, 255};
+            //GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);
             
             scale_x_i *= parent_scale_x;
             scale_y_i *= parent_scale_y;
@@ -478,9 +500,9 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             GPU_BlitTransformX(img, NULL, screen, x + offset_x + r_x, y + offset_y + r_y, -offset_x, -offset_y, angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
             
             // debug draw pivot
-            SDL_Color red = {255, 0, 0, 255};
+            /*SDL_Color red = {255, 0, 0, 255};
             GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);
-            printf("xy: %.0f, %.0f\n", r_x, r_y);
+            printf("xy: %.0f, %.0f\n", r_x, r_y);*/
             
         }
         
