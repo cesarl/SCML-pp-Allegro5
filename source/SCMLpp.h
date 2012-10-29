@@ -637,10 +637,12 @@ class Data
     int getNumAnimations(int entity) const;
     Entity::Animation* getAnimation(int entity, int animation) const;
     Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
+    Entity::Animation::Mainline::Key::Bone_Ref* getBoneRef(int entity, int animation, int key, int bone_ref) const;
     
     int getNextKeyID(int entity, int animation, int lastKey) const;
     Entity::Animation::Timeline::Key* getTimelineKey(int entity, int animation, int timeline, int key);
     Entity::Animation::Timeline::Key::Object* getTimelineObject(int entity, int animation, int timeline, int key);
+    Entity::Animation::Timeline::Key::Bone* getTimelineBone(int entity, int animation, int timeline, int key);
 };
 
 

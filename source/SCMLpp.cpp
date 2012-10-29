@@ -313,6 +313,28 @@ Data::Entity::Animation::Mainline::Key* Data::getKey(int entity, int animation, 
     return k->second;
 }
 
+
+Data::Entity::Animation::Mainline::Key::Bone_Ref* Data::getBoneRef(int entity, int animation, int key, int bone_ref) const
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return NULL;
+    
+    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
+    if(a == e->second->animations.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
+    if(k == a->second->mainline.keys.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Mainline::Key::Bone_Ref*>::const_iterator b = k->second->bone_refs.find(bone_ref);
+    if(b == k->second->bone_refs.end())
+        return NULL;
+    
+    return b->second;
+}
+
 // Gets the next key index according to the animation's looping setting.
 int Data::getNextKeyID(int entity, int animation, int lastKey) const
 {
@@ -394,7 +416,29 @@ Data::Entity::Animation::Timeline::Key::Object* Data::getTimelineObject(int enti
     return &k->second->object;
 }
 
-
+Data::Entity::Animation::Timeline::Key::Bone* Data::getTimelineBone(int entity, int animation, int timeline, int key)
+{
+    map<int, Entity*>::const_iterator e = entities.find(entity);
+    if(e == entities.end())
+        return NULL;
+    
+    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
+    if(a == e->second->animations.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
+    if(t == a->second->timelines.end())
+        return NULL;
+    
+    map<int, Entity::Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
+    if(k == t->second->keys.end())
+        return NULL;
+    
+    if(k->second->has_object)
+        return NULL;
+    
+    return &k->second->bone;
+}
 
 
 
@@ -1816,10 +1860,13 @@ bool Data::Entity::Animation::Timeline::Key::load(TiXmlElement* elem)
     has_object = true;
     
     TiXmlElement* child = elem->FirstChildElement("bone");
-    if(child != NULL && !bone.load(child))
+    if(child != NULL)
     {
-        SCML::log("SCML::Data::Entity::Animation::Timeline::Key failed to load a bone.\n");
         has_object = false;
+        if(!bone.load(child))
+        {
+            SCML::log("SCML::Data::Entity::Animation::Timeline::Key failed to load a bone.\n");
+        }
     }
         
     child = elem->FirstChildElement("object");

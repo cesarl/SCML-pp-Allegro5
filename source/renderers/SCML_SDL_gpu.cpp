@@ -165,6 +165,10 @@ class Matrix3x3
     void scale(float scale_x, float scale_y);
     void translate(float dx, float dy);
     void rotate(float radians);
+    // Pre-multiply operations
+    void prescale(float scale_x, float scale_y);
+    void pretranslate(float dx, float dy);
+    void prerotate(float radians);
 };
 
 Matrix3x3::Matrix3x3()
@@ -256,6 +260,48 @@ void Matrix3x3::rotate(float radians)
 	data[5] = -g*sinT+h*cosT;
 }
 
+// Pre-multiply
+void Matrix3x3::prescale(float scale_x, float scale_y)
+{
+	data[0] *= scale_x;
+	data[1] *= scale_y;
+	data[3] *= scale_x;
+	data[4] *= scale_y;
+	data[6] *= scale_x;
+	data[7] *= scale_y;
+}
+
+void Matrix3x3::pretranslate(float dx, float dy)
+{
+	float g = data[2];
+	float h = data[5];
+	float i = data[8];
+	data[0] += g*dx;
+	data[1] += g*dy;
+	data[3] += h*dx;
+	data[4] += h*dy;
+	data[6] += i*dx;
+	data[7] += i*dy;
+}
+
+void Matrix3x3::prerotate(float radians)
+{
+	float cosT = cos(radians);
+	float sinT = sin(radians);
+	float a = data[0];
+	float b = data[3];
+	float c = data[6];
+	float d = data[1];
+	float e = data[4];
+	float f = data[7];
+	data[0] = a*cosT-d*sinT;
+	data[1] = a*sinT+d*cosT;
+	data[3] = b*cosT-e*sinT;
+	data[4] = b*sinT+e*cosT;
+	data[6] = c*cosT-f*sinT;
+	data[7] = c*sinT+f*cosT;
+}
+
 /*
 a11 a12 a13    v1           a11*v1 + a12*v2 + a13*v3
 a21 a22 a23    v2     =     a21*v1 + a22*v2 + a23*v3
@@ -272,6 +318,21 @@ Vector3 multiply(const Matrix3x3& A, const Vector3& v)
 inline float lerp(float a, float b, float t)
 {
     return a + (b-a)*t;
+}
+
+void rotate_point(float& x, float& y, float angle, float origin_x, float origin_y)
+{
+    float s = sin(angle*M_PI/180);
+    float c = cos(angle*M_PI/180);
+    //float xnew = ((x-origin_x) * c) - ((y-origin_y) * s);
+    //float ynew = ((x-origin_x) * s) + ((y-origin_y) * c);
+    float xnew = (x * c) - (y * s);
+    float ynew = (x * s) + (y * c);
+    xnew += origin_x;
+    ynew += origin_y;
+    
+    x = xnew;
+    y = ynew;
 }
 
 
@@ -331,44 +392,96 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
                 t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
             
             float pivot_x = lerp(obj1->pivot_x, obj2->pivot_x, t)*img->w;
-            float pivot_y = lerp(obj1->pivot_y, obj2->pivot_y, t)*img->h;
+            float pivot_y = -lerp(obj1->pivot_y, obj2->pivot_y, t)*img->h;
             
             // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
             float angle_i;
             if(t_key1->spin > 0 && obj2->angle - obj1->angle < 0.0f)
-                angle_i = lerp(obj1->angle, obj2->angle + 360, t);
+                angle_i = -lerp(obj1->angle, obj2->angle + 360, t);
             else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.0f)
-                angle_i = lerp(obj1->angle, obj2->angle - 360, t);
+                angle_i = -lerp(obj1->angle, obj2->angle - 360, t);
             else
-                angle_i = lerp(obj1->angle, obj2->angle, t);
+                angle_i = -lerp(obj1->angle, obj2->angle, t);
             float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
             float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
             
             // Move image to draw from and rotate about the pivot point (SDL_gpu draws images at their center point)
             float offset_x = (-pivot_x + img->w/2);
-            float offset_y = (pivot_y - img->h/2);
+            float offset_y = (-pivot_y - img->h/2);
             
             // Relative object position
             float r_x = lerp(obj1->x, obj2->x, t);
-            float r_y = lerp(-obj1->y, -obj2->y, t);
+            float r_y = -lerp(obj1->y, obj2->y, t);
             
-            // Push it all through a matrix
-            Matrix3x3 mat = Matrix3x3::getIdentity();
-            mat.translate(x, y);
-            mat.rotate(angle*M_PI/180);
-            mat.scale(scale_x, scale_y);
-            mat.translate(r_x, r_y);
-            mat.rotate(-angle_i*M_PI/180);
-            mat.scale(scale_x_i, scale_y_i);
-            mat.translate(offset_x, offset_y);
             
-            GPU_BlitTransformMatrix(img, NULL, screen, 0, 0, mat.data);
+            // Get parent bone hierarchy
+            list<SCML::Data::Entity::Animation::Timeline::Key::Bone*> parents;
+            // Go through all the parents
+            for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, key, e1->second->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, key, bone_ref->parent))
+            {
+                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone = data->getTimelineBone(entity, animation, bone_ref->timeline, bone_ref->key);
+                if(bone == NULL)
+                    break;
+                
+                parents.push_front(bone);
+            }
+            
+            
+            SDL_Color green = {0, 255, 0, 255};
+            SDL_Color blue = {0, 0, 255, 255};
+            
+            float parent_x = 0.0f;
+            float parent_y = 0.0f;
+            float parent_angle = 0.0f;
+            float parent_scale_x = 1.0f;
+            float parent_scale_y = 1.0f;
+            for(list<SCML::Data::Entity::Animation::Timeline::Key::Bone*>::iterator e = parents.begin(); e != parents.end(); e++)
+            {
+                SCML::Data::Entity::Animation::Timeline::Key::Bone* bone = *e;
+                
+                // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
+                // However, the positioning is affected by rotation.
+                
+                float bx = bone->x * parent_scale_x;
+                float by = -bone->y * parent_scale_y;
+                rotate_point(bx, by, parent_angle, parent_x, parent_y);
+                
+                parent_angle += 360-bone->angle;
+                parent_x = bx;
+                parent_y = by;
+                GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
+                GPU_Circle(screen, x + bx, y + by, 5, blue);
+                printf("bone bxy: %.0f, %.0f\n", bx, by);
+                printf("bone xy: %.0f, %.0f\n", bone->x, -bone->y);
+                printf("bone angle: %.0f\n", bone->angle);
+                parent_scale_x *= bone->scale_x;
+                parent_scale_y *= bone->scale_y;
+                
+            }
+            
+            
+            printf("parent xy: %.0f, %.0f\n", parent_x, parent_y);
+            printf("parent angle: %.0f\n", parent_angle);
+            r_x *= parent_scale_x;
+            r_y *= parent_scale_y;
+            angle_i += parent_angle;
+            rotate_point(r_x, r_y, parent_angle, parent_x, parent_y);
+            
+            SDL_Color orange = {255, 168, 0, 255};
+            GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);
+            //GPU_Circle(screen, x + r_x, y + r_y, 5, blue);
+            
+            scale_x_i *= parent_scale_x;
+            scale_y_i *= parent_scale_y;
+            
+            //GPU_BlitTransform(img, NULL, screen, x + r_x, y + r_y, angle + angle_i, scale_x*scale_x_i, scale_y*scale_y_i);
+            GPU_BlitTransformX(img, NULL, screen, x + offset_x + r_x, y + offset_y + r_y, -offset_x, -offset_y, angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
             
             // debug draw pivot
-            /*Vector3 v(0, 0, 1);
-            v = multiply(mat, v);
             SDL_Color red = {255, 0, 0, 255};
-            GPU_CircleFilled(screen, v[0], v[1], 3, red);*/
+            GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);
+            printf("xy: %.0f, %.0f\n", r_x, r_y);
+            
         }
         
         e1++;
