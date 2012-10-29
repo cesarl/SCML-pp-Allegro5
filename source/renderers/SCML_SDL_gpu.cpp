@@ -441,9 +441,9 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             
             float parent_x = 0.0f;
             float parent_y = 0.0f;
-            float parent_angle = 0.0f;
-            float parent_scale_x = 1.0f;
-            float parent_scale_y = 1.0f;
+            float parent_angle = angle;
+            float parent_scale_x = scale_x;
+            float parent_scale_y = scale_y;
             list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key1 = parents1.begin();
             list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key2 = parents2.begin();
             
@@ -470,11 +470,10 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
                 parent_angle += 360-angle_b;
                 parent_x = bx;
                 parent_y = by;
+                
+                // debug draw bone
                 /*GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
-                GPU_Circle(screen, x + bx, y + by, 5, blue);
-                printf("bone bxy: %.0f, %.0f\n", bx, by);
-                printf("bone xy: %.0f, %.0f\n", bone1->x, -bone1->y);
-                printf("bone angle: %.0f\n", bone1->angle);*/
+                GPU_Circle(screen, x + bx, y + by, 5, blue);*/
                 parent_scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
                 parent_scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
                 
@@ -483,26 +482,31 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
             }
             
             
-            //printf("parent xy: %.0f, %.0f\n", parent_x, parent_y);
-            //printf("parent angle: %.0f\n", parent_angle);
+            // Transform the sprite by the parent transform.
             r_x *= parent_scale_x;
             r_y *= parent_scale_y;
-            angle_i += parent_angle;
             rotate_point(r_x, r_y, parent_angle, parent_x, parent_y);
             
-            //SDL_Color orange = {255, 168, 0, 255};
-            //GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);
-            
+            angle_i += parent_angle;
             scale_x_i *= parent_scale_x;
             scale_y_i *= parent_scale_y;
             
-            //GPU_BlitTransform(img, NULL, screen, x + r_x, y + r_y, angle + angle_i, scale_x*scale_x_i, scale_y*scale_y_i);
-            GPU_BlitTransformX(img, NULL, screen, x + offset_x + r_x, y + offset_y + r_y, -offset_x, -offset_y, angle_i + angle, scale_x_i*scale_x, scale_y_i*scale_y);
+            // debug draw transform from parent
+            /*SDL_Color orange = {255, 168, 0, 255};
+            GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);*/
+            
+            
+            // Transform the sprite by its own transform now.
+            
+            float sprite_x = offset_x*scale_x;
+            float sprite_y = offset_y*scale_y;
+            rotate_point(sprite_x, sprite_y, angle_i, r_x, r_y);
+            
+            GPU_BlitTransform(img, NULL, screen, x + sprite_x, y + sprite_y, angle_i, scale_x_i, scale_y_i);
             
             // debug draw pivot
             /*SDL_Color red = {255, 0, 0, 255};
-            GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);
-            printf("xy: %.0f, %.0f\n", r_x, r_y);*/
+            GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);*/
             
         }
         
