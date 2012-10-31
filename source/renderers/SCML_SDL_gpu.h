@@ -18,8 +18,9 @@ class FileSystem : public SCML::FileSystem
     virtual ~FileSystem();
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
+    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
     
-    GPU_Image* getImage(int folder, int file) const;
+    GPU_Image* getImage(int folderID, int fileID) const;
     
 };
 
@@ -36,7 +37,9 @@ class Entity : public SCML::Entity
     SCML_SDL_gpu::FileSystem* setFileSystem(SCML_SDL_gpu::FileSystem* fs);
     GPU_Target* setScreen(GPU_Target* scr);
     
-    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
+    virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
+    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y);
 };
 
 }

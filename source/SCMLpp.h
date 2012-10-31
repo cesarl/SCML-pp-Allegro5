@@ -655,6 +655,7 @@ class FileSystem
     
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename) = 0;
     virtual void clear() = 0;
+    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
 };
 
 
@@ -672,8 +673,13 @@ class Entity
     Entity(int entity, int animation = 0, int key = 0);
     virtual ~Entity(){}
     
+    virtual void convert_to_SCML_coords(float& x, float& y, float& angle)
+    {}
+    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
+    
     virtual void update(SCML::Data* data, int dt_ms);
-    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f) = 0;
+    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
+    virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y) = 0;
     
     virtual void startAnimation(int animation);
 };
