@@ -1,72 +1,30 @@
 #include "SCML_SDL_gpu.h"
-#include "libgen.h"
 #include <cstdlib>
 #include <cmath>
-#include <climits>
-
-#ifndef PATH_MAX
-#define PATH_MAX MAX_PATH
-#endif
 
 using namespace std;
 
 namespace SCML_SDL_gpu
 {
 
-static bool pathIsAbsolute(const std::string& path)
-{
-    #ifdef WIN32
-    if(path.size() < 3)
-        return false;
-    return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
-    #else
-    if(path.size() < 1)
-        return false;
-    return (path[0] == '/');
-    #endif
-    return false;
-}
 
 FileSystem::~FileSystem()
 {
     clear();
 }
 
-void FileSystem::load(SCML::Data* data)
+bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& filename)
 {
-    if(data == NULL || data->name.size() == 0)
-        return;
-    
-    string basedir;
-    if(!pathIsAbsolute(data->name))
+    GPU_Image* img = GPU_LoadImage(filename.c_str());
+    if(img == NULL)
+        return false;
+    if(!images.insert(make_pair(make_pair(folderID, fileID), img)).second)
     {
-        // Create a relative directory name for the path's base
-        char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, "%s", data->name.c_str());
-        basedir = dirname(buf);
-        if(basedir.size() > 0 && basedir[basedir.size()-1] != '/')
-            basedir += '/';
+        printf("SCML_SDL_gpu::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", filename.c_str(), folderID, fileID);
+        GPU_FreeImage(img);
+        return false;
     }
-    
-    for(map<int, SCML::Data::Folder*>::iterator e = data->folders.begin(); e != data->folders.end(); e++)
-    {
-        for(map<int, SCML::Data::Folder::File*>::iterator f = e->second->files.begin(); f != e->second->files.end(); f++)
-        {
-            if(f->second->type == "image")
-            {
-                printf("Loading \"%s\"\n", (basedir + f->second->name).c_str());
-                GPU_Image* img = GPU_LoadImage((basedir + f->second->name).c_str());
-                if(img != NULL)
-                {
-                    if(!images.insert(make_pair(make_pair(e->first, f->first), img)).second)
-                    {
-                        printf("SCML_SDL_gpu::FileSystem failed to load an image: duplicate folder/file id (%d/%d)\n", e->first, f->first);
-                        GPU_FreeImage(img);
-                    }
-                }
-            }
-        }
-    }
+    return true;
 }
 
 void FileSystem::clear()

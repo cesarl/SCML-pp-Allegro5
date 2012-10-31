@@ -2,6 +2,12 @@
 
 #include "XML_Helpers.h"
 #include "stdarg.h"
+#include "libgen.h"
+#include <climits>
+
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
 
 using namespace std;
 
@@ -2445,6 +2451,57 @@ void Data::Document_Info::clear()
     last_modified = "date and time not included";
     notes = "no additional notes";
 }
+
+
+
+
+
+
+
+static bool pathIsAbsolute(const std::string& path)
+{
+    #ifdef WIN32
+    if(path.size() < 3)
+        return false;
+    return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
+    #else
+    if(path.size() < 1)
+        return false;
+    return (path[0] == '/');
+    #endif
+    return false;
+}
+
+
+void FileSystem::load(SCML::Data* data)
+{
+    if(data == NULL || data->name.size() == 0)
+        return;
+    
+    string basedir;
+    if(!pathIsAbsolute(data->name))
+    {
+        // Create a relative directory name for the path's base
+        char buf[PATH_MAX];
+        snprintf(buf, PATH_MAX, "%s", data->name.c_str());
+        basedir = dirname(buf);
+        if(basedir.size() > 0 && basedir[basedir.size()-1] != '/')
+            basedir += '/';
+    }
+    
+    for(map<int, SCML::Data::Folder*>::iterator e = data->folders.begin(); e != data->folders.end(); e++)
+    {
+        for(map<int, SCML::Data::Folder::File*>::iterator f = e->second->files.begin(); f != e->second->files.end(); f++)
+        {
+            if(f->second->type == "image")
+            {
+                printf("Loading \"%s\"\n", (basedir + f->second->name).c_str());
+                loadImageFile(e->first, f->first, basedir + f->second->name);
+            }
+        }
+    }
+}
+
 
 
 

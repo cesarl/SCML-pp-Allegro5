@@ -14,10 +14,9 @@ class FileSystem : public SCML::FileSystem
     
     // Folder, File
     std::map<std::pair<int, int>, GPU_Image*> images;
-    // TODO: Destructor, etc.
     
     virtual ~FileSystem();
-    virtual void load(SCML::Data* data);
+    virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
     
     GPU_Image* getImage(int folder, int file) const;

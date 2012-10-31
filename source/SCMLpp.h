@@ -651,7 +651,9 @@ class FileSystem
     public:
     
     virtual ~FileSystem(){}
-    virtual void load(SCML::Data* data) = 0;
+    virtual void load(SCML::Data* data);
+    
+    virtual bool loadImageFile(int folderID, int fileID, const std::string& filename) = 0;
     virtual void clear() = 0;
 };
 
