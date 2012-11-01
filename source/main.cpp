@@ -1,10 +1,4 @@
-#include <iostream>
-#include "SCMLpp.h"
 #include "main.h"
-
-using namespace std;
-
-
 
 int main(int argc, char* argv[])
 {

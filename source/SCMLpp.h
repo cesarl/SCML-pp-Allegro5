@@ -645,42 +645,106 @@ class Data
     Entity::Animation::Timeline::Key::Bone* getTimelineBone(int entity, int animation, int timeline, int key);
 };
 
-
+/*! A storage class for images in a renderer-specific format (to be inherited).
+ */
 class FileSystem
 {
     public:
     
     virtual ~FileSystem(){}
+    
+	/*! Loads all images referenced by the given SCML data.
+	 * \param data SCML data object
+	 */
     virtual void load(SCML::Data* data);
     
+	/*! Loads an image from a file and stores it so that the folderID and fileID can be used to reference the image.
+	 * \param folderID Integer folder ID
+	 * \param fileID Integer file ID
+	 * \param filename Path of the image file
+	 * \return true on success, false on failure
+	 */
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename) = 0;
+    
+	/*! Cleans up all memory used by the FileSystem to store images, resetting it to an empty state.
+	 */
     virtual void clear() = 0;
+    
+	/*! Gets the dimensions of an image
+	 * \param folderID Integer folder ID
+	 * \param fileID Integer file ID
+	 * \return A pair consisting of the width and height of the image.  Returns (0,0) on error.
+	 */
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
 };
 
 
+/*! A class to directly interface with SCML character data and draw it using a specific renderer (to be inherited).
+ */
 class Entity
 {
     public:
     
+    /*! Integer index of the SCML entity */
     int entity;
+    /*! Integer index of the current SCML entity's animation */
     int animation;
+    /*! Integer index of the current animation's current mainline keyframe */
     int key;
     
-    int time;  // milliseconds
+    /*! Time (in milliseconds) tracking the position of the animation from its beginning. */
+    int time;
     
     Entity();
     Entity(int entity, int animation = 0, int key = 0);
     virtual ~Entity(){}
     
+	/*! Converts the given values from the renderer-specific coordinate system to the SCML coordinate system.
+	 * SCML coords: +x to the right, +y up, +angle counter-clockwise
+	 * \param x x-position in renderer coordinate system
+	 * \param y y-position in renderer coordinate system
+	 * \param angle Angle (in degrees) in renderer coordinate system
+	 */
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle)
     {}
+    
+	/*! Gets the dimensions of an image (from a FileSystem, presumably)
+	 * \param folderID Integer folder ID of the image
+	 * \param fileID Integer file ID of the image
+	 * \return A pair consisting of the width and height of the image.  Returns (0,0) on error.
+	 */
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
     
+	/*! Updates the state of the entity, incrementing its timer and changing the keyframe.
+	 * \param data SCML data object
+	 * \param dt_ms Change in time since last update, in milliseconds
+	 */
     virtual void update(SCML::Data* data, int dt_ms);
+    
+	/*! Draws the entity using a specific renderer by calling draw_internal().
+	 * \param data SCML data object
+	 * \param x x-position in renderer coordinate system
+	 * \param y y-position in renderer coordinate system
+	 * \param angle Angle (in degrees) in renderer coordinate system
+	 * \param scale_x Scale factor in the x-direction
+	 * \param scale_y Scale factor in the y-direction
+	 */
     virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
+    
+	/*! Draws an image using a specific renderer.
+	 * \param folderID Integer folder ID of the image
+	 * \param fileID Integer file ID of the image
+	 * \param x x-position in SCML coordinate system
+	 * \param y y-position in SCML coordinate system
+	 * \param angle Angle (in degrees) in SCML coordinate system
+	 * \param scale_x Scale factor in the x-direction
+	 * \param scale_y Scale factor in the y-direction
+	 */
     virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y) = 0;
     
+	/*! Chooses and resets the current animation.
+	 * \param animation Integer animation ID
+	 */
     virtual void startAnimation(int animation);
 };
 
