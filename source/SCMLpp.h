@@ -554,7 +554,7 @@ class Data
                         float value_float;
                         float min_float;
                         float max_float;
-                        std::string animation;  // Shouldn't this be an int?
+                        int animation;
                         float t;
                         //int z_index; // Does this exist?  Object_Ref has it, so probably not.
                         float volume;
@@ -970,7 +970,7 @@ class Entity
                     float value_float;
                     float min_float;
                     float max_float;
-                    std::string animation;  // Shouldn't this be an int?
+                    int animation;
                     float t;
                     //int z_index; // Does this exist?  Object_Ref has it, so probably not.
                     float volume;
@@ -992,9 +992,11 @@ class Entity
     
     Entity();
     Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
-    virtual ~Entity(){}
+    virtual ~Entity();
     
-    void load(SCML::Data* data);
+    virtual void load(SCML::Data* data);
+
+    virtual void clear();
     
 	/*! Converts the given values from the renderer-specific coordinate system to the SCML coordinate system.
 	 * SCML coords: +x to the right, +y up, +angle counter-clockwise

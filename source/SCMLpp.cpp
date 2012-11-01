@@ -2141,11 +2141,11 @@ void Data::Entity::Animation::Timeline::Key::Bone::clear()
 
 
 Data::Entity::Animation::Timeline::Key::Object::Object()
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
 {}
 
 Data::Entity::Animation::Timeline::Key::Object::Object(TiXmlElement* elem)
-    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
+    : atlas(0), folder(0), file(0), x(0.0f), y(0.0f), pivot_x(0.0f), pivot_y(1.0f), angle(0.0f), w(0.0f), h(0.0f), scale_x(1.0f), scale_y(1.0f), r(1.0f), g(1.0f), b(1.0f), a(1.0f), blend_mode("alpha"), value_int(0), min_int(0), max_int(0), value_float(0.0f), min_float(0.0f), max_float(0.0f), animation(0), t(0.0f), volume(1.0f), panning(0.0f), meta_data(NULL)
 {
     load(elem);
 }
@@ -2188,8 +2188,8 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
         min_float = xmlGetFloatAttr(elem, "min", 0.0f);
         max_float = xmlGetFloatAttr(elem, "max", 0.0f);
     }
-    //animation = xmlGetIntAttr(elem, "animation", 0);
-    animation = xmlGetStringAttr(elem, "animation", "");
+    
+    animation = xmlGetIntAttr(elem, "animation", 0);
     t = xmlGetFloatAttr(elem, "t", 0.0f);
     //if(object_type == "sound")
     {
@@ -2247,7 +2247,7 @@ void Data::Entity::Animation::Timeline::Key::Object::log(int recursive_depth) co
         SCML::log("min=%f\n", min_float);
         SCML::log("max=%f\n", max_float);
     }*/
-    SCML::log("animation=%s\n", animation.c_str());
+    SCML::log("animation=%d\n", animation);
     SCML::log("t=%f\n", t);
     //if(object_type == "sound")
     {
@@ -2295,7 +2295,7 @@ void Data::Entity::Animation::Timeline::Key::Object::clear()
     min_float = 0.0f;
     max_int = 0;
     max_float = 0.0f;
-    animation.clear();
+    animation = 0;
     t = 0.0f;
     volume = 1.0f;
     panning = 0.0f;
@@ -2515,7 +2515,46 @@ Entity::Entity()
 
 Entity::Entity(SCML::Data* data, int entity, int animation, int key)
     : entity(entity), animation(animation), key(key), time(0)
-{}
+{
+    load(data);
+}
+
+Entity::~Entity()
+{
+    clear();
+}
+
+void Entity::load(SCML::Data* data)
+{
+    if(data == NULL)
+        return;
+    
+    map<int, SCML::Data::Entity*>::iterator e = data->entities.find(entity);
+    if(e == data->entities.end())
+        return;
+    
+    SCML::Data::Entity* entity_ptr = e->second;
+    
+    name = entity_ptr->name;
+    for(map<int, SCML::Data::Entity::Animation*>::iterator a = entity_ptr->animations.begin(); a != entity_ptr->animations.end(); a++)
+    {
+        animations.insert(make_pair(a->first, new Animation(a->second)));
+    }
+}
+
+void Entity::clear()
+{
+    entity = -1;
+    animation = -1;
+    key = -1;
+    time = 0;
+    
+    for(map<int, Animation*>::iterator e = animations.begin(); e != animations.end(); e++)
+    {
+        delete e->second;
+    }
+    animations.clear();
+}
 
 void Entity::startAnimation(int animation)
 {
@@ -2867,29 +2906,45 @@ void Entity::draw_tweened_object(SCML::Data* data, float x, float y, float angle
 
 
 Entity::Animation::Animation(SCML::Data::Entity::Animation* animation)
-    : mainline(&animation->mainline)
+    : id(animation->id), name(animation->name), length(animation->length), looping(animation->looping), loop_to(animation->loop_to)
+    , mainline(&animation->mainline)
 {
-    
+    for(map<int, SCML::Data::Entity::Animation::Timeline*>::const_iterator e = animation->timelines.begin(); e != animation->timelines.end(); e++)
+    {
+        timelines.insert(make_pair(e->first, new Timeline(e->second)));
+    }
 }
 
 void Entity::Animation::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Timeline*>::const_iterator e = timelines.begin(); e != timelines.end(); e++)
+    {
+        delete e->second;
+    }
+    timelines.clear();
 }
 
 
 Entity::Animation::Mainline::Mainline(SCML::Data::Entity::Animation::Mainline* mainline)
 {
-    
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key*>::const_iterator e = mainline->keys.begin(); e != mainline->keys.end(); e++)
+    {
+        keys.insert(make_pair(e->first, new Key(e->second)));
+    }
 }
 
 void Entity::Animation::Mainline::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Mainline::Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    {
+        delete e->second;
+    }
+    keys.clear();
 }
 
 
 Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::Key* key)
+    : id(key->id), time(key->time)
 {
     
 }
@@ -2945,40 +3000,52 @@ void Entity::Animation::Mainline::Key::Object_Ref::clear()
 
 
 Entity::Animation::Timeline::Timeline(SCML::Data::Entity::Animation::Timeline* timeline)
+    : id(timeline->id), name(timeline->name), object_type(timeline->object_type), variable_type(timeline->variable_type), usage(timeline->usage)
 {
-    
+    for(map<int, SCML::Data::Entity::Animation::Timeline::Key*>::const_iterator e = timeline->keys.begin(); e != timeline->keys.end(); e++)
+    {
+        keys.insert(make_pair(e->first, new Key(e->second)));
+    }
 }
 
 void Entity::Animation::Timeline::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Timeline::Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    {
+        delete e->second;
+    }
+    keys.clear();
 }
 
 
 Entity::Animation::Timeline::Key::Key(SCML::Data::Entity::Animation::Timeline::Key* key)
-    : bone(&key->bone), object(&key->object)
+    : id(key->id), time(key->time), curve_type(key->curve_type), c1(key->c1), c2(key->c2), spin(key->spin), has_object(key->has_object), bone(&key->bone), object(&key->object)
 {
     
 }
 
 void Entity::Animation::Timeline::Key::clear()
 {
-    
+    bone.clear();
+    object.clear();
 }
 
 
 Entity::Animation::Timeline::Key::Bone::Bone(SCML::Data::Entity::Animation::Timeline::Key::Bone* bone)
-{
-    
-}
+    : x(bone->x), y(bone->y), angle(bone->angle), scale_x(bone->scale_x), scale_y(bone->scale_y), r(bone->r), g(bone->g), b(bone->b), a(bone->a)
+{}
 
 void Entity::Animation::Timeline::Key::Bone::clear()
-{
-    
-}
+{}
 
 
 Entity::Animation::Timeline::Key::Object::Object(SCML::Data::Entity::Animation::Timeline::Key::Object* object)
+    : atlas(object->atlas), folder(object->folder), file(object->file), name(object->name)
+    , x(object->x), y(object->y), pivot_x(object->pivot_x), pivot_y(object->pivot_y), angle(object->angle)
+    , w(object->w), h(object->h), scale_x(object->scale_x), scale_y(object->scale_y), r(object->r), g(object->g), b(object->b), a(object->a)
+    , blend_mode(object->blend_mode), value_string(object->value_string), value_int(object->value_int), min_int(object->min_int), max_int(object->max_int)
+    , value_float(object->value_float), min_float(object->min_float), max_float(object->max_float), animation(object->animation), t(object->t)
+    , volume(object->volume), panning(object->panning)
 {
     
 }
