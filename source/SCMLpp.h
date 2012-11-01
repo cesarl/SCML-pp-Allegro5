@@ -308,15 +308,63 @@ class Data
                     void log(int recursive_depth = 0) const;
                     void clear();
                     
+                    
                     class Object;
-                    std::map<int, Object*> objects;
                     class Object_Ref;
-                    std::map<int, Object_Ref*> object_refs;
+                    
+                    class Object_Container
+                    {
+                        public:
+                        Object* object;
+                        Object_Ref* object_ref;
                         
+                        Object_Container(Object* object)
+                            : object(object), object_ref(NULL)
+                        {}
+                        Object_Container(Object_Ref* object_ref)
+                            : object(NULL), object_ref(object_ref)
+                        {}
+                        
+                        bool hasObject() const
+                        {
+                            return (object != NULL);
+                        }
+                        bool hasObject_Ref() const
+                        {
+                            return (object_ref != NULL);
+                        }
+                    };
+                    
+                    std::map<int, Object_Container> objects;
+                    
+                    
                     class Bone;
-                    std::map<int, Bone*> bones;
                     class Bone_Ref;
-                    std::map<int, Bone_Ref*> bone_refs;
+                    
+                    class Bone_Container
+                    {
+                        public:
+                        Bone* bone;
+                        Bone_Ref* bone_ref;
+                        
+                        Bone_Container(Bone* bone)
+                            : bone(bone), bone_ref(NULL)
+                        {}
+                        Bone_Container(Bone_Ref* bone_ref)
+                            : bone(NULL), bone_ref(bone_ref)
+                        {}
+                        
+                        bool hasBone() const
+                        {
+                            return (bone != NULL);
+                        }
+                        bool hasBone_Ref() const
+                        {
+                            return (bone_ref != NULL);
+                        }
+                    };
+                    
+                    std::map<int, Bone_Container> bones;
                     
                     class Bone
                     {
@@ -635,14 +683,6 @@ class Data
     Document_Info document_info;
     
     int getNumAnimations(int entity) const;
-    Entity::Animation* getAnimation(int entity, int animation) const;
-    Entity::Animation::Mainline::Key* getKey(int entity, int animation, int key) const;
-    Entity::Animation::Mainline::Key::Bone_Ref* getBoneRef(int entity, int animation, int key, int bone_ref) const;
-    
-    int getNextKeyID(int entity, int animation, int lastKey) const;
-    Entity::Animation::Timeline::Key* getTimelineKey(int entity, int animation, int timeline, int key);
-    Entity::Animation::Timeline::Key::Object* getTimelineObject(int entity, int animation, int timeline, int key);
-    Entity::Animation::Timeline::Key::Bone* getTimelineBone(int entity, int animation, int timeline, int key);
 };
 
 /*! A storage class for images in a renderer-specific format (to be inherited).
@@ -679,7 +719,8 @@ class FileSystem
 };
 
 
-/*! A class to directly interface with SCML character data and draw it using a specific renderer (to be inherited).
+/*! A class to directly interface with SCML character data and draw it (to be inherited).
+ * Derived classes provide the means for the Entity to draw itself with a specific renderer.
  */
 class Entity
 {
@@ -739,14 +780,62 @@ class Entity
                 void clear();
                 
                 class Object;
-                std::map<int, Object*> objects;
                 class Object_Ref;
-                std::map<int, Object_Ref*> object_refs;
+                
+                class Object_Container
+                {
+                    public:
+                    Object* object;
+                    Object_Ref* object_ref;
                     
+                    Object_Container(Object* object)
+                        : object(object), object_ref(NULL)
+                    {}
+                    Object_Container(Object_Ref* object_ref)
+                        : object(NULL), object_ref(object_ref)
+                    {}
+                    
+                    bool hasObject() const
+                    {
+                        return (object != NULL);
+                    }
+                    bool hasObject_Ref() const
+                    {
+                        return (object_ref != NULL);
+                    }
+                };
+                
+                std::map<int, Object_Container> objects;
+                
+                
                 class Bone;
-                std::map<int, Bone*> bones;
                 class Bone_Ref;
-                std::map<int, Bone_Ref*> bone_refs;
+                
+                class Bone_Container
+                {
+                    public:
+                    Bone* bone;
+                    Bone_Ref* bone_ref;
+                    
+                    Bone_Container(Bone* bone)
+                        : bone(bone), bone_ref(NULL)
+                    {}
+                    Bone_Container(Bone_Ref* bone_ref)
+                        : bone(NULL), bone_ref(bone_ref)
+                    {}
+                    
+                    bool hasBone() const
+                    {
+                        return (bone != NULL);
+                    }
+                    bool hasBone_Ref() const
+                    {
+                        return (bone_ref != NULL);
+                    }
+                };
+                
+                std::map<int, Bone_Container> bones;
+                
                 
                 class Bone
                 {
@@ -1041,6 +1130,7 @@ class Entity
     Animation* getAnimation(int animation) const;
     Animation::Mainline::Key* getKey(int animation, int key) const;
     Animation::Mainline::Key::Bone_Ref* getBoneRef(int animation, int key, int bone_ref) const;
+    Animation::Mainline::Key::Object_Ref* getObjectRef(int animation, int key, int object_ref) const;
     
     int getNextKeyID(int animation, int lastKey) const;
     Animation::Timeline::Key* getTimelineKey(int animation, int timeline, int key);

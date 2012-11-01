@@ -290,162 +290,6 @@ int Data::getNumAnimations(int entity) const
     return e->second->animations.size();
 }
 
-Data::Entity::Animation* Data::getAnimation(int entity, int animation) const
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    return a->second;
-}
-
-Data::Entity::Animation::Mainline::Key* Data::getKey(int entity, int animation, int key) const
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
-    if(k == a->second->mainline.keys.end())
-        return NULL;
-    
-    return k->second;
-}
-
-
-Data::Entity::Animation::Mainline::Key::Bone_Ref* Data::getBoneRef(int entity, int animation, int key, int bone_ref) const
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
-    if(k == a->second->mainline.keys.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Mainline::Key::Bone_Ref*>::const_iterator b = k->second->bone_refs.find(bone_ref);
-    if(b == k->second->bone_refs.end())
-        return NULL;
-    
-    return b->second;
-}
-
-// Gets the next key index according to the animation's looping setting.
-int Data::getNextKeyID(int entity, int animation, int lastKey) const
-{
-    if(entity < 0 || animation < 0 || lastKey < 0)
-        return -1;
-    
-    
-    SCML::Data::Entity::Animation* animation_ptr = getAnimation(entity, animation);
-    if(animation_ptr == NULL)
-        return -2;
-    
-    if(animation_ptr->looping == "true")
-    {
-        // If we've reached the end of the keys, loop.
-        if(lastKey+1 >= int(animation_ptr->mainline.keys.size()))
-            return animation_ptr->loop_to;
-        else
-            return lastKey+1;
-    }
-    else if(animation_ptr->looping == "ping_pong")
-    {
-        // TODO: Implement ping_pong animation
-        return -3;
-    }
-    else  // assume "false"
-    {
-        // If we've haven't reached the end of the keys, return the next one.
-        if(lastKey+1 < int(animation_ptr->mainline.keys.size()))
-            return lastKey+1;
-        else // if we have reached the end, stick to this key
-            return lastKey;
-    }
-}
-
-
-Data::Entity::Animation::Timeline::Key* Data::getTimelineKey(int entity, int animation, int timeline, int key)
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
-        return NULL;
-    
-    return k->second;
-}
-
-
-Data::Entity::Animation::Timeline::Key::Object* Data::getTimelineObject(int entity, int animation, int timeline, int key)
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
-        return NULL;
-    
-    if(!k->second->has_object)
-        return NULL;
-    
-    return &k->second->object;
-}
-
-Data::Entity::Animation::Timeline::Key::Bone* Data::getTimelineBone(int entity, int animation, int timeline, int key)
-{
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
-        return NULL;
-    
-    map<int, Entity::Animation*>::const_iterator a = e->second->animations.find(animation);
-    if(a == e->second->animations.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
-        return NULL;
-    
-    map<int, Entity::Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
-        return NULL;
-    
-    if(k->second->has_object)
-        return NULL;
-    
-    return &k->second->bone;
-}
 
 
 
@@ -1230,7 +1074,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Bone_Ref* bone_ref = new Bone_Ref;
         if(bone_ref->load(child))
         {
-            if(!bone_refs.insert(make_pair(bone_ref->id, bone_ref)).second)
+            if(!bones.insert(make_pair(bone_ref->id, Bone_Container(bone_ref))).second)
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded a bone_ref with a duplicate id (%d).\n", bone_ref->id);
                 delete bone_ref;
@@ -1267,7 +1111,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Object_Ref* object_ref = new Object_Ref;
         if(object_ref->load(child))
         {
-            if(!object_refs.insert(make_pair(object_ref->id, object_ref)).second)
+            if(!objects.insert(make_pair(object_ref->id, Object_Container(object_ref))).second)
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded an object_ref with a duplicate id (%d).\n", object_ref->id);
                 delete object_ref;
@@ -1297,30 +1141,33 @@ void Data::Entity::Animation::Mainline::Key::log(int recursive_depth) const
         meta_data->log(recursive_depth-1);
     }
     
-    for(map<int, Bone*>::const_iterator e = bones.begin(); e != bones.end(); e++)
+    for(map<int, Bone_Container>::const_iterator e = bones.begin(); e != bones.end(); e++)
     {
-        SCML::log("Bone:\n");
-        e->second->log(recursive_depth - 1);
+        if(e->second.hasBone())
+        {
+            SCML::log("Bone:\n");
+            e->second.bone->log(recursive_depth - 1);
+        }
+        if(e->second.hasBone_Ref())
+        {
+            SCML::log("Bone_Ref:\n");
+            e->second.bone_ref->log(recursive_depth - 1);
+        }
     }
     
-    for(map<int, Bone_Ref*>::const_iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    for(map<int, Object_Container>::const_iterator e = objects.begin(); e != objects.end(); e++)
     {
-        SCML::log("Bone_Ref:\n");
-        e->second->log(recursive_depth - 1);
+        if(e->second.hasObject())
+        {
+            SCML::log("Object:\n");
+            e->second.object->log(recursive_depth - 1);
+        }
+        if(e->second.hasObject_Ref())
+        {
+            SCML::log("Object_Ref:\n");
+            e->second.object_ref->log(recursive_depth - 1);
+        }
     }
-    
-    for(map<int, Object*>::const_iterator e = objects.begin(); e != objects.end(); e++)
-    {
-        SCML::log("Object:\n");
-        e->second->log(recursive_depth - 1);
-    }
-    
-    for(map<int, Object_Ref*>::const_iterator e = object_refs.begin(); e != object_refs.end(); e++)
-    {
-        SCML::log("Object_Ref:\n");
-        e->second->log(recursive_depth - 1);
-    }
-    
 }
 
 void Data::Entity::Animation::Mainline::Key::clear()
@@ -1331,28 +1178,19 @@ void Data::Entity::Animation::Mainline::Key::clear()
     delete meta_data;
     meta_data = NULL;
     
-    for(map<int, Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    for(map<int, Bone_Container>::iterator e = bones.begin(); e != bones.end(); e++)
     {
-        delete e->second;
+        delete e->second.bone;
+        delete e->second.bone_ref;
     }
     bones.clear();
-    for(map<int, Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    bone_refs.clear();
     
-    for(map<int, Object*>::iterator e = objects.begin(); e != objects.end(); e++)
+    for(map<int, Object_Container>::iterator e = objects.begin(); e != objects.end(); e++)
     {
-        delete e->second;
+        delete e->second.object;
+        delete e->second.object_ref;
     }
     objects.clear();
-    
-    for(map<int, Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    object_refs.clear();
 }
 
 
@@ -2639,26 +2477,23 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
     
     convert_to_SCML_coords(x, y, angle);
     
-    // TODO: Follow z_index for drawing order
+    int nextKeyID = getNextKeyID(animation, key);
     
-    // Go through each temp object
-    for(map<int, Animation::Mainline::Key::Object*>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
+    // Go through each object
+    for(map<int, Animation::Mainline::Key::Object_Container>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
     {
-        draw_simple_object(x, y, angle, scale_x, scale_y, e->second);
-    }
-    
-    // Assuming that each object in a timeline's key corresponds to the object in every other timeline at the same sequential position...
-    Animation::Mainline::Key* key1 = key_ptr;
-    Animation::Mainline::Key* key2 = getKey(animation, getNextKeyID(animation, key));
-    
-    map<int, Animation::Mainline::Key::Object_Ref*>::iterator e1 = key1->object_refs.begin();
-    map<int, Animation::Mainline::Key::Object_Ref*>::iterator e2 = key2->object_refs.begin();
-    while(e1 != key1->object_refs.end() && e2 != key2->object_refs.end())
-    {
-        draw_tweened_object(x, y, angle, scale_x, scale_y, e1->second, e2->second);
-        
-        e1++;
-        e2++;
+        if(e->second.hasObject())
+        {
+            draw_simple_object(x, y, angle, scale_x, scale_y, e->second.object);
+        }
+        else
+        {
+            // Assuming that each object corresponds to objects of the same id...
+            Animation::Mainline::Key::Object_Ref* ref1 = e->second.object_ref;
+            Animation::Mainline::Key::Object_Ref* ref2 = getObjectRef(animation, nextKeyID, e->first);
+            
+            draw_tweened_object(x, y, angle, scale_x, scale_y, ref1, ref2);
+        }
     }
 }
 
@@ -2948,50 +2783,48 @@ Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::K
 {
     // Load bones and objects
     // FIXME: Change this to use Bone_Containers
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone*>::iterator e = key->bones.begin(); e != key->bones.end(); e++)
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key->bones.begin(); e != key->bones.end(); e++)
     {
-        Bone* b = new Bone(e->second);
-        bones.insert(make_pair(b->id, b));
+        if(e->second.hasBone())
+        {
+            Bone* b = new Bone(e->second.bone);
+            bones.insert(make_pair(b->id, Bone_Container(b)));
+        }
+        if(e->second.hasBone_Ref())
+        {
+            Bone_Ref* b = new Bone_Ref(e->second.bone_ref);
+            bones.insert(make_pair(b->id, Bone_Container(b)));
+        }
     }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = key->bone_refs.begin(); e != key->bone_refs.end(); e++)
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Container>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
     {
-        Bone_Ref* b = new Bone_Ref(e->second);
-        bone_refs.insert(make_pair(b->id, b));
-    }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
-    {
-        Object* b = new Object(e->second);
-        objects.insert(make_pair(b->id, b));
-    }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
-    {
-        Object_Ref* b = new Object_Ref(e->second);
-        object_refs.insert(make_pair(b->id, b));
+        if(e->second.hasObject())
+        {
+            Object* b = new Object(e->second.object);
+            objects.insert(make_pair(b->id, Object_Container(b)));
+        }
+        if(e->second.hasObject_Ref())
+        {
+            Object_Ref* b = new Object_Ref(e->second.object_ref);
+            objects.insert(make_pair(b->id, Object_Container(b)));
+        }
     }
 }
 
 void Entity::Animation::Mainline::Key::clear()
 {
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Container>::iterator e = bones.begin(); e != bones.end(); e++)
     {
-        delete e->second;
+        delete e->second.bone;
+        delete e->second.bone_ref;
     }
     bones.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Container>::iterator e = objects.begin(); e != objects.end(); e++)
     {
-        delete e->second;
-    }
-    bone_refs.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
-    {
-        delete e->second;
+        delete e->second.object;
+        delete e->second.object_ref;
     }
     objects.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    object_refs.clear();
 }
 
 
@@ -3135,11 +2968,28 @@ Entity::Animation::Mainline::Key::Bone_Ref* Entity::getBoneRef(int animation, in
     if(k == a->second->mainline.keys.end())
         return NULL;
     
-    map<int, Animation::Mainline::Key::Bone_Ref*>::const_iterator b = k->second->bone_refs.find(bone_ref);
-    if(b == k->second->bone_refs.end())
+    map<int, Animation::Mainline::Key::Bone_Container>::const_iterator b = k->second->bones.find(bone_ref);
+    if(b == k->second->bones.end() || !b->second.hasBone_Ref())
         return NULL;
     
-    return b->second;
+    return b->second.bone_ref;
+}
+
+Entity::Animation::Mainline::Key::Object_Ref* Entity::getObjectRef(int animation, int key, int object_ref) const
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
+    if(k == a->second->mainline.keys.end())
+        return NULL;
+    
+    map<int, Animation::Mainline::Key::Object_Container>::const_iterator c = k->second->objects.find(object_ref);
+    if(c == k->second->objects.end() || !c->second.hasObject_Ref())
+        return NULL;
+    
+    return c->second.object_ref;
 }
 
 // Gets the next key index according to the animation's looping setting.
