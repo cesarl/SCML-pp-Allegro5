@@ -27,7 +27,7 @@ void main_loop()
     list<Entity*> entities;
     for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
     {
-        Entity* entity = new Entity(e->first);
+        Entity* entity = new Entity(&data, e->first);
         entity->setFileSystem(&fs);
         entity->setScreen(screen);
         entities.push_back(entity);
@@ -89,7 +89,7 @@ void main_loop()
                     
                     for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
                     {
-                        Entity* entity = new Entity(e->first);
+                        Entity* entity = new Entity(&data, e->first);
                         entity->setFileSystem(&fs);
                         entity->setScreen(screen);
                         entities.push_back(entity);

@@ -32,7 +32,7 @@ class Entity : public SCML::Entity
     GPU_Target* screen;
     
     Entity();
-    Entity(int entity, int animation = 0, int key = 0);
+    Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
     
     SCML_SDL_gpu::FileSystem* setFileSystem(SCML_SDL_gpu::FileSystem* fs);
     GPU_Target* setScreen(GPU_Target* scr);

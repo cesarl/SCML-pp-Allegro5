@@ -62,8 +62,8 @@ Entity::Entity()
     : SCML::Entity()
 {}
 
-Entity::Entity(int entity, int animation, int key)
-    : SCML::Entity(entity, animation, key)
+Entity::Entity(SCML::Data* data, int entity, int animation, int key)
+    : SCML::Entity(data, entity, animation, key)
 {}
 
 FileSystem* Entity::setFileSystem(FileSystem* fs)

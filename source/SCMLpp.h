@@ -695,9 +695,306 @@ class Entity
     /*! Time (in milliseconds) tracking the position of the animation from its beginning. */
     int time;
     
+    
+    std::string name;
+
+    class Animation;
+    std::map<int, Animation*> animations;
+    
+    //Meta_Data* meta_data;
+
+    class Animation
+    {
+        public:
+        
+        int id;
+        std::string name;
+        int length;
+        std::string looping;
+        int loop_to;
+        
+        //Meta_Data* meta_data;
+        
+        // More to follow...
+        class Mainline
+        {
+            public:
+            
+            Mainline(SCML::Data::Entity::Animation::Mainline* mainline);
+            
+            void clear();
+            
+            class Key;
+            std::map<int, Key*> keys;
+            
+            class Key
+            {
+                public:
+                
+                int id;
+                int time;
+                //Meta_Data* meta_data;
+                
+                Key(SCML::Data::Entity::Animation::Mainline::Key* key);
+                
+                void clear();
+                
+                class Object;
+                std::map<int, Object*> objects;
+                class Object_Ref;
+                std::map<int, Object_Ref*> object_refs;
+                    
+                class Bone;
+                std::map<int, Bone*> bones;
+                class Bone_Ref;
+                std::map<int, Bone_Ref*> bone_refs;
+                
+                class Bone
+                {
+                    public:
+                    
+                    int id;
+                    int parent;  // a bone id
+                    float x;
+                    float y;
+                    float angle;
+                    float scale_x;
+                    float scale_y;
+                    float r;
+                    float g;
+                    float b;
+                    float a;
+                    //Meta_Data* meta_data;
+                    
+                    class Object;
+                    std::map<int, Object*> objects;
+                    class Object_Ref;
+                    std::map<int, Object_Ref*> object_refs;
+                    
+                    Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone);
+                    
+                    void clear();
+                    
+                };
+                
+                class Bone_Ref
+                {
+                    public:
+                    
+                    int id;
+                    int parent;  // a bone id
+                    int timeline;
+                    int key;
+                    
+                    class Object;
+                    std::map<int, Object*> objects;
+                    class Object_Ref;
+                    std::map<int, Object_Ref*> object_refs;
+                    
+                    Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref);
+                    
+                    void clear();
+                };
+                
+                class Object
+                {
+                    public:
+                    
+                    int id;
+                    int parent; // a bone id
+                    std::string object_type;
+                    int atlas;
+                    int folder;
+                    int file;
+                    std::string usage;
+                    std::string blend_mode;
+                    std::string name;
+                    float x;
+                    float y;
+                    float pivot_x;
+                    float pivot_y;
+                    int pixel_art_mode_x;
+                    int pixel_art_mode_y;
+                    int pixel_art_mode_pivot_x;
+                    int pixel_art_mode_pivot_y;
+                    float angle;
+                    float w;
+                    float h;
+                    float scale_x;
+                    float scale_y;
+                    float r;
+                    float g;
+                    float b;
+                    float a;
+                    std::string variable_type;
+                    std::string value_string;
+                    int value_int;
+                    int min_int;
+                    int max_int;
+                    float value_float;
+                    float min_float;
+                    float max_float;
+                    int animation;
+                    float t;
+                    int z_index;
+                    float volume;
+                    float panning;
+                    
+                    //Meta_Data* meta_data;
+                    
+                    Object(SCML::Data::Entity::Animation::Mainline::Key::Object* object);
+                    
+                    void clear();
+                    
+                };
+                    
+                class Object_Ref
+                {
+                    public:
+                    
+                    int id;
+                    int parent;  // a bone id
+                    int timeline;
+                    int key;
+                    int z_index;
+                    
+                    Object_Ref(SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* object_ref);
+                    
+                    void clear();
+                };
+            };
+            
+        };
+        
+        Mainline mainline;
+    
+        class Timeline;
+        std::map<int, Timeline*> timelines;
+    
+        Animation(SCML::Data::Entity::Animation* animation);
+        
+        void clear();
+        
+        
+        
+        class Timeline
+        {
+            public:
+            
+            int id;
+            std::string name;
+            std::string object_type;
+            std::string variable_type;
+            std::string usage;
+            //Meta_Data* meta_data;
+            
+            Timeline(SCML::Data::Entity::Animation::Timeline* timeline);
+            
+            void clear();
+            
+            class Key;
+            std::map<int, Key*> keys;
+            
+            class Key
+            {
+                public:
+                
+                int id;
+                int time;
+                std::string curve_type;
+                float c1;
+                float c2;
+                int spin;
+                
+                bool has_object;
+                
+                Key(SCML::Data::Entity::Animation::Timeline::Key* key);
+                
+                void clear();
+                
+                
+                //Meta_Data_Tweenable* meta_data;
+            
+                class Bone
+                {
+                    public:
+                    
+                    float x;
+                    float y;
+                    float angle;
+                    float scale_x;
+                    float scale_y;
+                    float r;
+                    float g;
+                    float b;
+                    float a;
+                    //Meta_Data_Tweenable* meta_data;
+                    
+                    Bone(SCML::Data::Entity::Animation::Timeline::Key::Bone* bone);
+                    
+                    void clear();
+                };
+                
+                Bone bone;
+                
+                class Object
+                {
+                    public:
+                    
+                    //std::string object_type; // Does this exist?
+                    int atlas;
+                    int folder;
+                    int file;
+                    //std::string usage;  // Does this exist?
+                    std::string name;
+                    float x;
+                    float y;
+                    float pivot_x;
+                    float pivot_y;
+                    // pixel_art_mode stuff?
+                    float angle;
+                    float w;
+                    float h;
+                    float scale_x;
+                    float scale_y;
+                    float r;
+                    float g;
+                    float b;
+                    float a;
+                    std::string blend_mode;
+                    //std::string variable_type; // Does this exist?
+                    std::string value_string;
+                    int value_int;
+                    int min_int;
+                    int max_int;
+                    float value_float;
+                    float min_float;
+                    float max_float;
+                    std::string animation;  // Shouldn't this be an int?
+                    float t;
+                    //int z_index; // Does this exist?  Object_Ref has it, so probably not.
+                    float volume;
+                    float panning;
+                    //Meta_Data_Tweenable* meta_data;
+                    
+                    Object(SCML::Data::Entity::Animation::Timeline::Key::Object* object);
+                    
+                    void clear();
+                    
+                };
+                
+                Object object;
+            };
+        };
+    };
+    
+    
+    
     Entity();
-    Entity(int entity, int animation = 0, int key = 0);
+    Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
     virtual ~Entity(){}
+    
+    void load(SCML::Data* data);
     
 	/*! Converts the given values from the renderer-specific coordinate system to the SCML coordinate system.
 	 * SCML coords: +x to the right, +y up, +angle counter-clockwise

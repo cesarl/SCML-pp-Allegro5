@@ -2513,7 +2513,7 @@ Entity::Entity()
     : entity(-1), animation(-1), key(-1), time(0)
 {}
 
-Entity::Entity(int entity, int animation, int key)
+Entity::Entity(SCML::Data* data, int entity, int animation, int key)
     : entity(entity), animation(animation), key(key), time(0)
 {}
 
@@ -2863,6 +2863,129 @@ void Entity::draw_tweened_object(SCML::Data* data, float x, float y, float angle
         GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);*/
         
     }
+}
+
+
+Entity::Animation::Animation(SCML::Data::Entity::Animation* animation)
+    : mainline(&animation->mainline)
+{
+    
+}
+
+void Entity::Animation::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Mainline(SCML::Data::Entity::Animation::Mainline* mainline)
+{
+    
+}
+
+void Entity::Animation::Mainline::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::Key* key)
+{
+    
+}
+
+void Entity::Animation::Mainline::Key::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Key::Bone::Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone)
+{
+    
+}
+
+void Entity::Animation::Mainline::Key::Bone::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref)
+{
+    
+}
+
+void Entity::Animation::Mainline::Key::Bone_Ref::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Key::Object::Object(SCML::Data::Entity::Animation::Mainline::Key::Object* object)
+{
+    
+}
+
+void Entity::Animation::Mainline::Key::Object::clear()
+{
+    
+}
+
+
+Entity::Animation::Mainline::Key::Object_Ref::Object_Ref(SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* object_ref)
+{
+    
+}
+
+void Entity::Animation::Mainline::Key::Object_Ref::clear()
+{
+    
+}
+
+
+Entity::Animation::Timeline::Timeline(SCML::Data::Entity::Animation::Timeline* timeline)
+{
+    
+}
+
+void Entity::Animation::Timeline::clear()
+{
+    
+}
+
+
+Entity::Animation::Timeline::Key::Key(SCML::Data::Entity::Animation::Timeline::Key* key)
+    : bone(&key->bone), object(&key->object)
+{
+    
+}
+
+void Entity::Animation::Timeline::Key::clear()
+{
+    
+}
+
+
+Entity::Animation::Timeline::Key::Bone::Bone(SCML::Data::Entity::Animation::Timeline::Key::Bone* bone)
+{
+    
+}
+
+void Entity::Animation::Timeline::Key::Bone::clear()
+{
+    
+}
+
+
+Entity::Animation::Timeline::Key::Object::Object(SCML::Data::Entity::Animation::Timeline::Key::Object* object)
+{
+    
+}
+
+void Entity::Animation::Timeline::Key::Object::clear()
+{
+    
 }
 
 
