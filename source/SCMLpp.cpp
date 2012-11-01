@@ -2942,61 +2942,191 @@ void Entity::Animation::Mainline::clear()
     keys.clear();
 }
 
+void Entity::Animation::Mainline::Key::addHierarchy(Bone_Ref* bone_ref, SCML::Data::Entity::Animation::Mainline::Key* key)
+{
+    // Add any children of this bone
+    // FIXME: Change this to use Bone_Containers so bare Bones and their children are not ignored.
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = key->bone_refs.begin(); e != key->bone_refs.end(); e++)
+    {
+        // Only grab the children of the bone
+        if(e->second->parent == bone_ref->id)
+        {
+            Bone_Ref* b = new Bone_Ref(e->second);
+            
+            addHierarchy(b, key);
+            
+            bone_ref->bone_refs.insert(make_pair(e->second->id, b));
+        }
+    }
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
+    {
+        // Only grab the children of the bone
+        if(e->second->parent == bone_ref->id)
+        {
+            Object* b = new Object(e->second);
+            
+            bone_ref->objects.insert(make_pair(b->id, b));
+        }
+    }
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
+    {
+        // Only grab the children of the bone
+        if(e->second->parent == bone_ref->id)
+        {
+            Object_Ref* b = new Object_Ref(e->second);
+            
+            bone_ref->object_refs.insert(make_pair(b->id, b));
+        }
+    }
+}
 
 Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::Key* key)
     : id(key->id), time(key->time)
 {
-    
+    // Load bones and objects in their proper hierarchy here
+    // FIXME: Change this to use Bone_Containers so bare Bones and their children are not ignored.
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = key->bone_refs.begin(); e != key->bone_refs.end(); e++)
+    {
+        // Only grab the top-level bones
+        if(e->second->parent < 0)
+        {
+            Bone_Ref* b = new Bone_Ref(e->second);
+            
+            addHierarchy(b, key);
+            
+            bone_refs.insert(make_pair(b->id, b));
+        }
+    }
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
+    {
+        // Only grab the top-level objects
+        if(e->second->parent < 0)
+        {
+            Object* b = new Object(e->second);
+            
+            objects.insert(make_pair(b->id, b));
+        }
+    }
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
+    {
+        // Only grab the top-level objects
+        if(e->second->parent < 0)
+        {
+            Object_Ref* b = new Object_Ref(e->second);
+            
+            object_refs.insert(make_pair(b->id, b));
+        }
+    }
 }
 
 void Entity::Animation::Mainline::Key::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    {
+        delete e->second;
+    }
+    bones.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    bone_refs.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
+    {
+        delete e->second;
+    }
+    objects.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    object_refs.clear();
 }
 
 
 Entity::Animation::Mainline::Key::Bone::Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone)
+    : parent(bone->parent)
+    , x(bone->x), y(bone->y), angle(bone->angle), scale_x(bone->scale_x), scale_y(bone->scale_y), r(bone->r), g(bone->g), b(bone->b), a(bone->a)
 {
-    
+    // FIXME: Can bones have child bones?  They must, which means that bones and bone_refs must share their ID sequence so that bones and objects can refer to either.
 }
 
 void Entity::Animation::Mainline::Key::Bone::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    {
+        delete e->second;
+    }
+    bones.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    bone_refs.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
+    {
+        delete e->second;
+    }
+    objects.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    object_refs.clear();
 }
 
 
 Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref)
-{
-    
-}
+    : id(bone_ref->id), parent(bone_ref->parent), timeline(bone_ref->timeline), key(bone_ref->key)
+{}
 
 void Entity::Animation::Mainline::Key::Bone_Ref::clear()
 {
-    
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
+    {
+        delete e->second;
+    }
+    bones.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    bone_refs.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
+    {
+        delete e->second;
+    }
+    objects.clear();
+    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
+    {
+        delete e->second;
+    }
+    object_refs.clear();
 }
 
 
 Entity::Animation::Mainline::Key::Object::Object(SCML::Data::Entity::Animation::Mainline::Key::Object* object)
-{
-    
-}
+    : id(object->id), parent(object->parent), object_type(object->object_type), atlas(object->atlas), folder(object->folder), file(object->file)
+    , usage(object->usage), blend_mode(object->blend_mode), name(object->name)
+    , x(object->x), y(object->y), pivot_x(object->pivot_x), pivot_y(object->pivot_y)
+    , pixel_art_mode_x(object->pixel_art_mode_x), pixel_art_mode_y(object->pixel_art_mode_y), pixel_art_mode_pivot_x(object->pixel_art_mode_pivot_x), pixel_art_mode_pivot_y(object->pixel_art_mode_pivot_y), angle(object->angle)
+    , w(object->w), h(object->h), scale_x(object->scale_x), scale_y(object->scale_y), r(object->r), g(object->g), b(object->b), a(object->a)
+    , variable_type(object->variable_type), value_string(object->value_string), value_int(object->value_int), min_int(object->min_int), max_int(object->max_int)
+    , value_float(object->value_float), min_float(object->min_float), max_float(object->max_float), animation(object->animation), t(object->t)
+    , z_index(object->z_index)
+    , volume(object->volume), panning(object->panning)
+{}
 
 void Entity::Animation::Mainline::Key::Object::clear()
-{
-    
-}
+{}
 
 
 Entity::Animation::Mainline::Key::Object_Ref::Object_Ref(SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* object_ref)
-{
-    
-}
+    : id(object_ref->id), parent(object_ref->parent), timeline(object_ref->timeline), key(object_ref->key), z_index(object_ref->z_index)
+{}
 
 void Entity::Animation::Mainline::Key::Object_Ref::clear()
-{
-    
-}
+{}
 
 
 Entity::Animation::Timeline::Timeline(SCML::Data::Entity::Animation::Timeline* timeline)

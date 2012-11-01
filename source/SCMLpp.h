@@ -737,6 +737,8 @@ class Entity
                 
                 Key(SCML::Data::Entity::Animation::Mainline::Key* key);
                 
+                class Bone_Ref;
+                void addHierarchy(Bone_Ref* bone_ref, SCML::Data::Entity::Animation::Mainline::Key* key);
                 void clear();
                 
                 class Object;
@@ -766,10 +768,11 @@ class Entity
                     float a;
                     //Meta_Data* meta_data;
                     
-                    class Object;
                     std::map<int, Object*> objects;
-                    class Object_Ref;
                     std::map<int, Object_Ref*> object_refs;
+                    
+                    std::map<int, Bone*> bones;
+                    std::map<int, Bone_Ref*> bone_refs;
                     
                     Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone);
                     
@@ -786,10 +789,11 @@ class Entity
                     int timeline;
                     int key;
                     
-                    class Object;
                     std::map<int, Object*> objects;
-                    class Object_Ref;
                     std::map<int, Object_Ref*> object_refs;
+                    
+                    std::map<int, Bone*> bones;
+                    std::map<int, Bone_Ref*> bone_refs;
                     
                     Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref);
                     
