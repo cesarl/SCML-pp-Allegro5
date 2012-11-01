@@ -731,6 +731,9 @@ class Entity
 	 */
     virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
     
+    virtual void draw_simple_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object* obj);
+    virtual void draw_tweened_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref1, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref2);
+    
 	/*! Draws an image using a specific renderer.
 	 * \param folderID Integer folder ID of the image
 	 * \param fileID Integer file ID of the image
