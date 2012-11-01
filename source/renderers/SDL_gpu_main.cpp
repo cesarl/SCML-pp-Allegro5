@@ -118,7 +118,7 @@ void main_loop()
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->update(&data, dt_ms);
+            (*e)->update(dt_ms);
         }
         
         GPU_ClearRGBA(screen, 255, 255, 255, 255);
@@ -126,7 +126,7 @@ void main_loop()
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(&data, x, y, angle, scale, scale);
+            (*e)->draw(x, y, angle, scale, scale);
         }
         
         

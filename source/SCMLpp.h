@@ -715,7 +715,6 @@ class Entity
         
         //Meta_Data* meta_data;
         
-        // More to follow...
         class Mainline
         {
             public:
@@ -737,8 +736,6 @@ class Entity
                 
                 Key(SCML::Data::Entity::Animation::Mainline::Key* key);
                 
-                class Bone_Ref;
-                void addHierarchy(Bone_Ref* bone_ref, SCML::Data::Entity::Animation::Mainline::Key* key);
                 void clear();
                 
                 class Object;
@@ -768,12 +765,6 @@ class Entity
                     float a;
                     //Meta_Data* meta_data;
                     
-                    std::map<int, Object*> objects;
-                    std::map<int, Object_Ref*> object_refs;
-                    
-                    std::map<int, Bone*> bones;
-                    std::map<int, Bone_Ref*> bone_refs;
-                    
                     Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone);
                     
                     void clear();
@@ -788,12 +779,6 @@ class Entity
                     int parent;  // a bone id
                     int timeline;
                     int key;
-                    
-                    std::map<int, Object*> objects;
-                    std::map<int, Object_Ref*> object_refs;
-                    
-                    std::map<int, Bone*> bones;
-                    std::map<int, Bone_Ref*> bone_refs;
                     
                     Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref);
                     
@@ -1019,23 +1004,21 @@ class Entity
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
     
 	/*! Updates the state of the entity, incrementing its timer and changing the keyframe.
-	 * \param data SCML data object
 	 * \param dt_ms Change in time since last update, in milliseconds
 	 */
-    virtual void update(SCML::Data* data, int dt_ms);
+    virtual void update(int dt_ms);
     
 	/*! Draws the entity using a specific renderer by calling draw_internal().
-	 * \param data SCML data object
 	 * \param x x-position in renderer coordinate system
 	 * \param y y-position in renderer coordinate system
 	 * \param angle Angle (in degrees) in renderer coordinate system
 	 * \param scale_x Scale factor in the x-direction
 	 * \param scale_y Scale factor in the y-direction
 	 */
-    virtual void draw(SCML::Data* data, float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
+    virtual void draw(float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
     
-    virtual void draw_simple_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object* obj);
-    virtual void draw_tweened_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref1, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref2);
+    virtual void draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj);
+    virtual void draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2);
     
 	/*! Draws an image using a specific renderer.
 	 * \param folderID Integer folder ID of the image
@@ -1052,6 +1035,17 @@ class Entity
 	 * \param animation Integer animation ID
 	 */
     virtual void startAnimation(int animation);
+    
+    
+    int getNumAnimations() const;
+    Animation* getAnimation(int animation) const;
+    Animation::Mainline::Key* getKey(int animation, int key) const;
+    Animation::Mainline::Key::Bone_Ref* getBoneRef(int animation, int key, int bone_ref) const;
+    
+    int getNextKeyID(int animation, int lastKey) const;
+    Animation::Timeline::Key* getTimelineKey(int animation, int timeline, int key);
+    Animation::Timeline::Key::Object* getTimelineObject(int animation, int timeline, int key);
+    Animation::Timeline::Key::Bone* getTimelineBone(int animation, int timeline, int key);
 };
 
 

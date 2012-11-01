@@ -2564,17 +2564,17 @@ void Entity::startAnimation(int animation)
 }
 
 
-void Entity::update(SCML::Data* data, int dt_ms)
+void Entity::update(int dt_ms)
 {
-    if(data == NULL || entity < 0 || animation < 0 || key < 0)
+    if(entity < 0 || animation < 0 || key < 0)
         return;
     
     
-    SCML::Data::Entity::Animation* animation_ptr = data->getAnimation(entity, animation);
+    SCML::Entity::Animation* animation_ptr = getAnimation(animation);
     if(animation_ptr == NULL)
         return;
     
-    int nextKey = data->getNextKeyID(entity, animation, key);
+    int nextKey = getNextKeyID(animation, key);
     int nextTime = 0;
     if(nextKey < key)
     {
@@ -2584,7 +2584,7 @@ void Entity::update(SCML::Data* data, int dt_ms)
     else
     {
         // Get nextTime from the nextKey
-        SCML::Data::Entity::Animation::Mainline::Key* nextKey_ptr = data->getKey(entity, animation, nextKey);
+        Animation::Mainline::Key* nextKey_ptr = getKey(animation, nextKey);
         if(nextKey_ptr != NULL)
         {
             nextTime = nextKey_ptr->time;
@@ -2600,7 +2600,7 @@ void Entity::update(SCML::Data* data, int dt_ms)
         key = nextKey;
         
         // Get the starting time from the new key.
-        SCML::Data::Entity::Animation::Mainline::Key* key_ptr = data->getKey(entity, animation, key);
+        Animation::Mainline::Key* key_ptr = getKey(animation, key);
         if(key_ptr != NULL)
         {
             time = key_ptr->time + overshot;
@@ -2630,10 +2630,10 @@ static void rotate_point(float& x, float& y, float angle, float origin_x, float 
     y = ynew;
 }
 
-void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y)
+void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
 {
     // Get key
-    SCML::Data::Entity::Animation::Mainline::Key* key_ptr = data->getKey(entity, animation, key);
+    Animation::Mainline::Key* key_ptr = getKey(animation, key);
     if(key_ptr == NULL)
         return;
     
@@ -2642,20 +2642,20 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
     // TODO: Follow z_index for drawing order
     
     // Go through each temp object
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
+    for(map<int, Animation::Mainline::Key::Object*>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
     {
-        draw_simple_object(data, x, y, angle, scale_x, scale_y, e->second);
+        draw_simple_object(x, y, angle, scale_x, scale_y, e->second);
     }
     
     // Assuming that each object in a timeline's key corresponds to the object in every other timeline at the same sequential position...
-    SCML::Data::Entity::Animation::Mainline::Key* key1 = key_ptr;
-    SCML::Data::Entity::Animation::Mainline::Key* key2 = data->getKey(entity, animation, data->getNextKeyID(entity, animation, key));
+    Animation::Mainline::Key* key1 = key_ptr;
+    Animation::Mainline::Key* key2 = getKey(animation, getNextKeyID(animation, key));
     
-    map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e1 = key1->object_refs.begin();
-    map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e2 = key2->object_refs.begin();
+    map<int, Animation::Mainline::Key::Object_Ref*>::iterator e1 = key1->object_refs.begin();
+    map<int, Animation::Mainline::Key::Object_Ref*>::iterator e2 = key2->object_refs.begin();
     while(e1 != key1->object_refs.end() && e2 != key2->object_refs.end())
     {
-        draw_tweened_object(data, x, y, angle, scale_x, scale_y, e1->second, e2->second);
+        draw_tweened_object(x, y, angle, scale_x, scale_y, e1->second, e2->second);
         
         e1++;
         e2++;
@@ -2663,7 +2663,7 @@ void Entity::draw(SCML::Data* data, float x, float y, float angle, float scale_x
 }
 
 
-void Entity::draw_simple_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object* obj)
+void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj)
 {
     // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
     float angle_i = obj->angle;
@@ -2675,12 +2675,12 @@ void Entity::draw_simple_object(SCML::Data* data, float x, float y, float angle,
     float r_y = obj->y;
     
     // Get parent bone hierarchy
-    list<SCML::Data::Entity::Animation::Timeline::Key*> parents;
+    list<Animation::Timeline::Key*> parents;
     // Go through all the parents
     // TODO: Get the right parentage
-    /*for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, ref1->key, bone_ref->parent))
+    /*for(Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, ref1->key, bone_ref->parent))
     {
-        SCML::Data::Entity::Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
+        Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
         if(k == NULL || k->has_object)
             break;
         
@@ -2696,11 +2696,11 @@ void Entity::draw_simple_object(SCML::Data* data, float x, float y, float angle,
     float parent_angle = angle;
     float parent_scale_x = scale_x;
     float parent_scale_y = scale_y;
-    list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key = parents.begin();
+    list<Animation::Timeline::Key*>::iterator b_key = parents.begin();
     
     while(b_key != parents.end())
     {
-        SCML::Data::Entity::Animation::Timeline::Key::Bone* bone = &(*b_key)->bone;
+        Animation::Timeline::Key::Bone* bone = &(*b_key)->bone;
         
         // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
         // However, the positioning is affected by rotation.
@@ -2762,13 +2762,13 @@ void Entity::draw_simple_object(SCML::Data* data, float x, float y, float angle,
     draw_internal(obj->folder, obj->file, x + sprite_x, y + sprite_y, angle_i, scale_x_i, scale_y_i);
 }
 
-void Entity::draw_tweened_object(SCML::Data* data, float x, float y, float angle, float scale_x, float scale_y, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref1, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref* ref2)
+void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2)
 {
     // Dereference object_refs
-    SCML::Data::Entity::Animation::Timeline::Key* t_key1 = data->getTimelineKey(entity, animation, ref1->timeline, ref1->key);
-    SCML::Data::Entity::Animation::Timeline::Key* t_key2 = data->getTimelineKey(entity, animation, ref2->timeline, ref2->key);
-    SCML::Data::Entity::Animation::Timeline::Key::Object* obj1 = data->getTimelineObject(entity, animation, ref1->timeline, ref1->key);
-    SCML::Data::Entity::Animation::Timeline::Key::Object* obj2 = data->getTimelineObject(entity, animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key::Object* obj1 = getTimelineObject(animation, ref1->timeline, ref1->key);
+    Animation::Timeline::Key::Object* obj2 = getTimelineObject(animation, ref2->timeline, ref2->key);
     if(obj2 == NULL)
         obj2 = obj1;
     if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
@@ -2794,20 +2794,20 @@ void Entity::draw_tweened_object(SCML::Data* data, float x, float y, float angle
         float r_y = lerp(obj1->y, obj2->y, t);
         
         // Get parent bone hierarchy
-        list<SCML::Data::Entity::Animation::Timeline::Key*> parents1;
-        list<SCML::Data::Entity::Animation::Timeline::Key*> parents2;
+        list<Animation::Timeline::Key*> parents1;
+        list<Animation::Timeline::Key*> parents2;
         // Go through all the parents
-        for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, ref1->key, bone_ref->parent))
+        for(Animation::Mainline::Key::Bone_Ref* bone_ref = getBoneRef(animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = getBoneRef(animation, ref1->key, bone_ref->parent))
         {
-            SCML::Data::Entity::Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
+            Animation::Timeline::Key* k = getTimelineKey(animation, bone_ref->timeline, bone_ref->key);
             if(k == NULL || k->has_object)
                 break;
             
             parents1.push_front(k);
         }
-        for(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, ref2->key, ref2->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, ref2->key, bone_ref->parent))
+        for(Animation::Mainline::Key::Bone_Ref* bone_ref = getBoneRef(animation, ref2->key, ref2->parent); bone_ref != NULL; bone_ref = getBoneRef(animation, ref2->key, bone_ref->parent))
         {
-            SCML::Data::Entity::Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
+            Animation::Timeline::Key* k = getTimelineKey(animation, bone_ref->timeline, bone_ref->key);
             if(k == NULL || k->has_object)
                 break;
             
@@ -2823,13 +2823,13 @@ void Entity::draw_tweened_object(SCML::Data* data, float x, float y, float angle
         float parent_angle = angle;
         float parent_scale_x = scale_x;
         float parent_scale_y = scale_y;
-        list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key1 = parents1.begin();
-        list<SCML::Data::Entity::Animation::Timeline::Key*>::iterator b_key2 = parents2.begin();
+        list<Animation::Timeline::Key*>::iterator b_key1 = parents1.begin();
+        list<Animation::Timeline::Key*>::iterator b_key2 = parents2.begin();
         
         while(b_key1 != parents1.end() && b_key2 != parents2.end())
         {
-            SCML::Data::Entity::Animation::Timeline::Key::Bone* bone1 = &(*b_key1)->bone;
-            SCML::Data::Entity::Animation::Timeline::Key::Bone* bone2 = &(*b_key2)->bone;
+            Animation::Timeline::Key::Bone* bone1 = &(*b_key1)->bone;
+            Animation::Timeline::Key::Bone* bone2 = &(*b_key2)->bone;
             
             // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
             // However, the positioning is affected by rotation.
@@ -2942,80 +2942,31 @@ void Entity::Animation::Mainline::clear()
     keys.clear();
 }
 
-void Entity::Animation::Mainline::Key::addHierarchy(Bone_Ref* bone_ref, SCML::Data::Entity::Animation::Mainline::Key* key)
-{
-    // Add any children of this bone
-    // FIXME: Change this to use Bone_Containers so bare Bones and their children are not ignored.
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = key->bone_refs.begin(); e != key->bone_refs.end(); e++)
-    {
-        // Only grab the children of the bone
-        if(e->second->parent == bone_ref->id)
-        {
-            Bone_Ref* b = new Bone_Ref(e->second);
-            
-            addHierarchy(b, key);
-            
-            bone_ref->bone_refs.insert(make_pair(e->second->id, b));
-        }
-    }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
-    {
-        // Only grab the children of the bone
-        if(e->second->parent == bone_ref->id)
-        {
-            Object* b = new Object(e->second);
-            
-            bone_ref->objects.insert(make_pair(b->id, b));
-        }
-    }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
-    {
-        // Only grab the children of the bone
-        if(e->second->parent == bone_ref->id)
-        {
-            Object_Ref* b = new Object_Ref(e->second);
-            
-            bone_ref->object_refs.insert(make_pair(b->id, b));
-        }
-    }
-}
 
 Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::Key* key)
     : id(key->id), time(key->time)
 {
-    // Load bones and objects in their proper hierarchy here
-    // FIXME: Change this to use Bone_Containers so bare Bones and their children are not ignored.
+    // Load bones and objects
+    // FIXME: Change this to use Bone_Containers
+    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone*>::iterator e = key->bones.begin(); e != key->bones.end(); e++)
+    {
+        Bone* b = new Bone(e->second);
+        bones.insert(make_pair(b->id, b));
+    }
     for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = key->bone_refs.begin(); e != key->bone_refs.end(); e++)
     {
-        // Only grab the top-level bones
-        if(e->second->parent < 0)
-        {
-            Bone_Ref* b = new Bone_Ref(e->second);
-            
-            addHierarchy(b, key);
-            
-            bone_refs.insert(make_pair(b->id, b));
-        }
+        Bone_Ref* b = new Bone_Ref(e->second);
+        bone_refs.insert(make_pair(b->id, b));
     }
     for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object*>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
     {
-        // Only grab the top-level objects
-        if(e->second->parent < 0)
-        {
-            Object* b = new Object(e->second);
-            
-            objects.insert(make_pair(b->id, b));
-        }
+        Object* b = new Object(e->second);
+        objects.insert(make_pair(b->id, b));
     }
     for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = key->object_refs.begin(); e != key->object_refs.end(); e++)
     {
-        // Only grab the top-level objects
-        if(e->second->parent < 0)
-        {
-            Object_Ref* b = new Object_Ref(e->second);
-            
-            object_refs.insert(make_pair(b->id, b));
-        }
+        Object_Ref* b = new Object_Ref(e->second);
+        object_refs.insert(make_pair(b->id, b));
     }
 }
 
@@ -3047,33 +2998,10 @@ void Entity::Animation::Mainline::Key::clear()
 Entity::Animation::Mainline::Key::Bone::Bone(SCML::Data::Entity::Animation::Mainline::Key::Bone* bone)
     : parent(bone->parent)
     , x(bone->x), y(bone->y), angle(bone->angle), scale_x(bone->scale_x), scale_y(bone->scale_y), r(bone->r), g(bone->g), b(bone->b), a(bone->a)
-{
-    // FIXME: Can bones have child bones?  They must, which means that bones and bone_refs must share their ID sequence so that bones and objects can refer to either.
-}
+{}
 
 void Entity::Animation::Mainline::Key::Bone::clear()
-{
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
-    {
-        delete e->second;
-    }
-    bones.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    bone_refs.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
-    {
-        delete e->second;
-    }
-    objects.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    object_refs.clear();
-}
+{}
 
 
 Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref(SCML::Data::Entity::Animation::Mainline::Key::Bone_Ref* bone_ref)
@@ -3081,28 +3009,7 @@ Entity::Animation::Mainline::Key::Bone_Ref::Bone_Ref(SCML::Data::Entity::Animati
 {}
 
 void Entity::Animation::Mainline::Key::Bone_Ref::clear()
-{
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone*>::iterator e = bones.begin(); e != bones.end(); e++)
-    {
-        delete e->second;
-    }
-    bones.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Ref*>::iterator e = bone_refs.begin(); e != bone_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    bone_refs.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object*>::iterator e = objects.begin(); e != objects.end(); e++)
-    {
-        delete e->second;
-    }
-    objects.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Ref*>::iterator e = object_refs.begin(); e != object_refs.end(); e++)
-    {
-        delete e->second;
-    }
-    object_refs.clear();
-}
+{}
 
 
 Entity::Animation::Mainline::Key::Object::Object(SCML::Data::Entity::Animation::Mainline::Key::Object* object)
@@ -3183,6 +3090,149 @@ Entity::Animation::Timeline::Key::Object::Object(SCML::Data::Entity::Animation::
 void Entity::Animation::Timeline::Key::Object::clear()
 {
     
+}
+
+
+
+
+
+
+int Entity::getNumAnimations() const
+{
+    return animations.size();
+}
+
+Entity::Animation* Entity::getAnimation(int animation) const
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    return a->second;
+}
+
+Entity::Animation::Mainline::Key* Entity::getKey(int animation, int key) const
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
+    if(k == a->second->mainline.keys.end())
+        return NULL;
+    
+    return k->second;
+}
+
+
+Entity::Animation::Mainline::Key::Bone_Ref* Entity::getBoneRef(int animation, int key, int bone_ref) const
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
+    if(k == a->second->mainline.keys.end())
+        return NULL;
+    
+    map<int, Animation::Mainline::Key::Bone_Ref*>::const_iterator b = k->second->bone_refs.find(bone_ref);
+    if(b == k->second->bone_refs.end())
+        return NULL;
+    
+    return b->second;
+}
+
+// Gets the next key index according to the animation's looping setting.
+int Entity::getNextKeyID(int animation, int lastKey) const
+{
+    if(entity < 0 || animation < 0 || lastKey < 0)
+        return -1;
+    
+    
+    Animation* animation_ptr = getAnimation(animation);
+    if(animation_ptr == NULL)
+        return -2;
+    
+    if(animation_ptr->looping == "true")
+    {
+        // If we've reached the end of the keys, loop.
+        if(lastKey+1 >= int(animation_ptr->mainline.keys.size()))
+            return animation_ptr->loop_to;
+        else
+            return lastKey+1;
+    }
+    else if(animation_ptr->looping == "ping_pong")
+    {
+        // TODO: Implement ping_pong animation
+        return -3;
+    }
+    else  // assume "false"
+    {
+        // If we've haven't reached the end of the keys, return the next one.
+        if(lastKey+1 < int(animation_ptr->mainline.keys.size()))
+            return lastKey+1;
+        else // if we have reached the end, stick to this key
+            return lastKey;
+    }
+}
+
+
+Entity::Animation::Timeline::Key* Entity::getTimelineKey(int animation, int timeline, int key)
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
+    if(t == a->second->timelines.end())
+        return NULL;
+    
+    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
+    if(k == t->second->keys.end())
+        return NULL;
+    
+    return k->second;
+}
+
+
+Entity::Animation::Timeline::Key::Object* Entity::getTimelineObject(int animation, int timeline, int key)
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
+    if(t == a->second->timelines.end())
+        return NULL;
+    
+    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
+    if(k == t->second->keys.end())
+        return NULL;
+    
+    if(!k->second->has_object)
+        return NULL;
+    
+    return &k->second->object;
+}
+
+Entity::Animation::Timeline::Key::Bone* Entity::getTimelineBone(int animation, int timeline, int key)
+{
+    map<int, Animation*>::const_iterator a = animations.find(animation);
+    if(a == animations.end())
+        return NULL;
+    
+    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
+    if(t == a->second->timelines.end())
+        return NULL;
+    
+    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
+    if(k == t->second->keys.end())
+        return NULL;
+    
+    if(k->second->has_object)
+        return NULL;
+    
+    return &k->second->bone;
 }
 
 
