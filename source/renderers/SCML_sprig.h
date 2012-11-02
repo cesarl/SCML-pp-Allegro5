@@ -1,13 +1,13 @@
-#ifndef _SDL_GPU_RENDERER_H__
-#define _SDL_GPU_RENDERER_H__
+#ifndef _SPRIG_RENDERER_H__
+#define _SPRIG_RENDERER_H__
 
-#include "SDL_gpu.h"
+#include "sprig.h"
 #include "../SCMLpp.h"
 #include <map>
 
-/*! \brief Namespace for SDL_gpu renderer (the example renderer)
+/*! \brief Namespace for SPriG renderer
 */
-namespace SCML_SDL_gpu
+namespace SCML_sprig
 {
     
 class FileSystem : public SCML::FileSystem
@@ -15,14 +15,14 @@ class FileSystem : public SCML::FileSystem
     public:
     
     // Folder, File
-    std::map<std::pair<int, int>, GPU_Image*> images;
+    std::map<std::pair<int, int>, SDL_Surface*> images;
     
     virtual ~FileSystem();
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
     
-    GPU_Image* getImage(int folderID, int fileID) const;
+    SDL_Surface* getImage(int folderID, int fileID) const;
     
 };
 
@@ -30,14 +30,14 @@ class Entity : public SCML::Entity
 {
     public:
     
-    SCML_SDL_gpu::FileSystem* file_system;
-    GPU_Target* screen;
+    FileSystem* file_system;
+    SDL_Surface* screen;
     
     Entity();
     Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
     
-    SCML_SDL_gpu::FileSystem* setFileSystem(SCML_SDL_gpu::FileSystem* fs);
-    GPU_Target* setScreen(GPU_Target* scr);
+    FileSystem* setFileSystem(FileSystem* fs);
+    SDL_Surface* setScreen(SDL_Surface* scr);
     
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
