@@ -83,6 +83,25 @@
 					<Add directory="../externals/lib/linux32" />
 				</Linker>
 			</Target>
+			<Target title="Linux64 - SPriG">
+				<Option output="../test-SPriG" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../" />
+				<Option object_output="obj/SPriG/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="`sdl-config --cflags`" />
+					<Add directory="../externals/include" />
+					<Add directory="libraries" />
+				</Compiler>
+				<Linker>
+					<Add option="`sdl-config --libs`" />
+					<Add library="sprig" />
+					<Add library="SDL_image" />
+					<Add directory="../externals/lib/linux64" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -112,9 +131,11 @@
 		</Unit>
 		<Unit filename="renderers/SCML_sprig.cpp">
 			<Option target="Linux32 - SPriG" />
+			<Option target="Linux64 - SPriG" />
 		</Unit>
 		<Unit filename="renderers/SCML_sprig.h">
 			<Option target="Linux32 - SPriG" />
+			<Option target="Linux64 - SPriG" />
 		</Unit>
 		<Unit filename="renderers/SDL_gpu_main.cpp">
 			<Option target="Linux64 - SDL_gpu" />
@@ -123,6 +144,7 @@
 		</Unit>
 		<Unit filename="renderers/sprig_main.cpp">
 			<Option target="Linux32 - SPriG" />
+			<Option target="Linux64 - SPriG" />
 		</Unit>
 		<Extensions>
 			<code_completion />
