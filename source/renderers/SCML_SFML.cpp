@@ -116,7 +116,6 @@ void Entity::draw_internal(int folderID, int fileID, float x, float y, float ang
     sprite.setPosition(x, y);
     
     screen->draw(sprite);
-    //SPG_TransformX(img, screen, angle, scale_x, scale_y, img->w/2, img->h/2, x, y, SPG_TBLEND);
 }
 
 
