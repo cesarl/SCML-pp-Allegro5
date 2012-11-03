@@ -30,13 +30,13 @@ class Entity : public SCML::Entity
 {
     public:
     
-    SCML_SDL_gpu::FileSystem* file_system;
+    FileSystem* file_system;
     GPU_Target* screen;
     
     Entity();
     Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
     
-    SCML_SDL_gpu::FileSystem* setFileSystem(SCML_SDL_gpu::FileSystem* fs);
+    FileSystem* setFileSystem(FileSystem* fs);
     GPU_Target* setScreen(GPU_Target* scr);
     
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);

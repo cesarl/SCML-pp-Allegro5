@@ -2600,10 +2600,14 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
 void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2)
 {
     // Dereference object_refs
+    if(ref2 == NULL)
+        ref2 = ref1;
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key* t_key2 = (ref2 == NULL? NULL : getTimelineKey(animation, ref2->timeline, ref2->key));
     Animation::Timeline::Key::Object* obj1 = getTimelineObject(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key::Object* obj2 = getTimelineObject(animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key::Object* obj2 = (ref2 == NULL? NULL : getTimelineObject(animation, ref2->timeline, ref2->key));
+    if(t_key2 == NULL)
+        t_key2 = t_key1;
     if(obj2 == NULL)
         obj2 = obj1;
     if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
@@ -2615,9 +2619,9 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
         // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
         float angle_i;
-        if(t_key1->spin > 0 && obj2->angle - obj1->angle < 0.0f)
+        if(t_key1->spin > 0 && obj2->angle - obj1->angle < -0.00001f)
             angle_i = lerp(obj1->angle, obj2->angle + 360, t);
-        else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.0f)
+        else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.00001f)
             angle_i = lerp(obj1->angle, obj2->angle - 360, t);
         else
             angle_i = lerp(obj1->angle, obj2->angle, t);

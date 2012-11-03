@@ -9,13 +9,8 @@ SDL_Surface* screen = NULL;
 Uint8* keystates = NULL;
 
 
-void main_loop()
+void main_loop(vector<string>& data_files)
 {
-    vector<string> data_files;
-    data_files.push_back("samples/monster/Example.SCML");
-    data_files.push_back("samples/knight/knight.scml");
-    
-    
     size_t data_file_index = 0;
     SCML::Data data(data_files[data_file_index]);
     data.log();
