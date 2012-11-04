@@ -2,9 +2,12 @@
 #include <vector>
 #include <list>
 
+#include "CCDirector.h"
+
 using namespace std;
 using namespace cocos2d;
 using namespace SCML_cocos2dx;
+USING_NS_CC;
 
 
 
@@ -120,10 +123,44 @@ bool AppDelegate::applicationDidFinishLaunching()
 {
     // initialize director
     CCDirector *pDirector = CCDirector::sharedDirector();
-    pDirector->setOpenGLView(CCEGLView::sharedOpenGLView());
 
-    // enable High Resource Mode(2x, such as iphone4) and maintains low resource on other devices.
-    //pDirector->enableRetinaDisplay(true);
+    pDirector->setOpenGLView(CCEGLView::sharedOpenGLView());
+    
+    TargetPlatform target = getTargetPlatform();
+    
+    if (target == kTargetIpad)
+    {
+        // ipad
+        
+        CCFileUtils::sharedFileUtils()->setResourceDirectory("iphonehd");
+        
+        // don't enable retina because we don't have ipad hd resource
+        CCEGLView::sharedOpenGLView()->setDesignResolutionSize(960, 640, kResolutionNoBorder);
+    }
+    else if (target == kTargetIphone)
+    {
+        // iphone
+        
+        // try to enable retina on device
+        if (true)//true == CCDirector::sharedDirector()->enableRetinaDisplay(true))
+        {
+            // iphone hd
+            CCFileUtils::sharedFileUtils()->setResourceDirectory("iphonehd");
+        }
+        else 
+        {
+            CCFileUtils::sharedFileUtils()->setResourceDirectory("iphone");
+        }
+    }
+    else 
+    {
+        // android, windows, blackberry, linux or mac
+        // use 960*640 resources as design resolution size
+        CCFileUtils::sharedFileUtils()->setResourceDirectory("iphonehd");
+        CCEGLView::sharedOpenGLView()->setDesignResolutionSize(1600, 1200, kResolutionNoBorder);
+    }
+
+	//pDirector->enableRetinaDisplay(true);
 
     // turn on display FPS
     pDirector->setDisplayStats(true);
@@ -136,6 +173,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 
     // run
     pDirector->runWithScene(pScene);
+
     return true;
 }
 
@@ -161,12 +199,26 @@ void main_loop(vector<string>& data_files)
 
 
 
+// 500 is enough?
+#define MAXPATHLEN 500
 
 bool init(unsigned int w, unsigned int h)
 {
     
-    AppDelegate app;
-    //CCApplication::sharedApplication()->setResourceRootPath(".");
+    // get application path
+    /*int length;
+    char fullpath[MAXPATHLEN];
+    length = readlink("/proc/self/exe", fullpath, sizeof(fullpath));
+    fullpath[length] = '\0';
+
+    std::string resourcePath = fullpath;
+    resourcePath = resourcePath.substr(0, resourcePath.find_last_of("/"));
+    resourcePath += "/../../../Resources/";*/
+    
+    
+    AppDelegate* app = new AppDelegate;  // Cocos2d-x stores this secretly...
+    (void)app;
+    //CCApplication::sharedApplication()->setResourceRootPath(resourcePath.c_str());
     CCEGLView* eglView = CCEGLView::sharedOpenGLView();
     eglView->setFrameSize(800, 600);
     
@@ -175,7 +227,7 @@ bool init(unsigned int w, unsigned int h)
 
 void quit()
 {
-    
+    //delete CCApplication::sharedApplication();
 }
 
 
