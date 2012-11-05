@@ -2500,7 +2500,7 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
 
 void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj)
 {
-    // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
+    // 'spin' is based on what you are coming from (key1)
     float angle_i = obj->angle;
     float scale_x_i = obj->scale_x;
     float scale_y_i = obj->scale_y;
@@ -2597,6 +2597,7 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
     draw_internal(obj->folder, obj->file, x + sprite_x, y + sprite_y, angle_i, scale_x_i, scale_y_i);
 }
 
+
 void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2)
 {
     // Dereference object_refs
@@ -2612,25 +2613,9 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         obj2 = obj1;
     if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
     {
-        
         float t = 0.0f;
         if(t_key2->time != t_key1->time)
             t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
-        
-        // 'spin' is based on what you are coming from (key1) and has nothing to do with what you are going to (key2), I guess...
-        float angle_i;
-        if(t_key1->spin > 0 && obj2->angle - obj1->angle < -0.00001f)
-            angle_i = lerp(obj1->angle, obj2->angle + 360, t);
-        else if(t_key1->spin < 0 && obj2->angle - obj1->angle > 0.00001f)
-            angle_i = lerp(obj1->angle, obj2->angle - 360, t);
-        else
-            angle_i = lerp(obj1->angle, obj2->angle, t);
-        float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
-        float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
-        
-        // Relative object position
-        float r_x = lerp(obj1->x, obj2->x, t);
-        float r_y = lerp(obj1->y, obj2->y, t);
         
         // Get parent bone hierarchy
         list<Animation::Timeline::Key*> parents1;
@@ -2654,8 +2639,8 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         }
         
         
-        //SDL_Color green = {0, 255, 0, 255};
-        //SDL_Color blue = {0, 0, 255, 255};
+        /*SDL_Color green = {0, 255, 0, 255};
+        SDL_Color blue = {0, 0, 255, 255};*/
         
         float parent_x = 0.0f;
         float parent_y = 0.0f;
@@ -2678,9 +2663,9 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
             rotate_point(bx, by, parent_angle, parent_x, parent_y);
             
             float angle_b;
-            if((*b_key1)->spin > 0 && bone2->angle - bone1->angle < 0.0f)
+            if((*b_key1)->spin > 0 && bone1->angle > bone2->angle)
                 angle_b = lerp(bone1->angle, bone2->angle + 360, t);
-            else if((*b_key1)->spin < 0 && bone2->angle - bone1->angle > 0.0f)
+            else if((*b_key1)->spin < 0 && bone1->angle < bone2->angle)
                 angle_b = lerp(bone1->angle, bone2->angle - 360, t);
             else
                 angle_b = lerp(bone1->angle, bone2->angle, t);
@@ -2690,8 +2675,8 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
             parent_y = by;
             
             // debug draw bone
-            /*GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
-            GPU_Circle(screen, x + bx, y + by, 5, blue);*/
+            /*GPU_Line(GPU_GetDisplayTarget(), x + parent_x, -(y + parent_y), x + parent_x + 50*cos(parent_angle*M_PI/180), -(y + parent_y + 50*sin(parent_angle*M_PI/180)), green);
+            GPU_Circle(GPU_GetDisplayTarget(), x + bx, -(y + by), 5, blue);*/
             parent_scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
             parent_scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
             
@@ -2701,6 +2686,21 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
         
         
+        
+        // 'spin' is based on what you are coming from (key1)
+        float angle_i;
+        if(t_key1->spin > 0 && obj1->angle > obj2->angle)
+            angle_i = lerp(obj1->angle, obj2->angle + 360, t);
+        else if(t_key1->spin < 0 && obj1->angle < obj2->angle)
+            angle_i = lerp(obj1->angle, obj2->angle - 360, t);
+        else
+            angle_i = lerp(obj1->angle, obj2->angle, t);
+        float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
+        float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
+        
+        // Relative object position
+        float r_x = lerp(obj1->x, obj2->x, t);
+        float r_y = lerp(obj1->y, obj2->y, t);
         
         
         
@@ -2715,7 +2715,7 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
         // debug draw transform from parent
         /*SDL_Color orange = {255, 168, 0, 255};
-        GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);*/
+        GPU_Line(GPU_GetDisplayTarget(), x + parent_x, -(y + parent_y), x + r_x, -(y + r_y), orange);*/
         
         
         // Transform the sprite by its own transform now.
@@ -2738,7 +2738,7 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
         // debug draw pivot
         /*SDL_Color red = {255, 0, 0, 255};
-        GPU_CircleFilled(screen, x + r_x, y + r_y, 3, red);*/
+        GPU_CircleFilled(GPU_GetDisplayTarget(), x + r_x, -(y + r_y), 3, red);*/
         
     }
 }

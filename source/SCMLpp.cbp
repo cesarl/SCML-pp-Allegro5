@@ -115,6 +115,7 @@
 					<Add directory="libraries" />
 				</Compiler>
 				<Linker>
+					<Add option="-Wl,-rpath,\\$$ORIGIN/externals/lib/linux64" />
 					<Add library="sfml-window-s" />
 					<Add library="sfml-graphics-s" />
 					<Add library="sfml-system-s" />
@@ -141,6 +142,7 @@
 					<Add directory="../externals/include/cocos2dx/kazmath/include" />
 				</Compiler>
 				<Linker>
+					<Add option="-Wl,-rpath,\\$$ORIGIN/externals/lib/linux32" />
 					<Add library="cocos2d" />
 					<Add library="GL" />
 					<Add library="GLEW" />
@@ -163,6 +165,7 @@
 					<Add directory="../externals/include/cocos2dx/kazmath/include" />
 				</Compiler>
 				<Linker>
+					<Add option="-Wl,-rpath,\\$$ORIGIN/externals/lib/linux64" />
 					<Add library="cocos2d" />
 					<Add library="GL" />
 					<Add library="GLEW" />
@@ -182,6 +185,7 @@
 					<Add directory="libraries" />
 				</Compiler>
 				<Linker>
+					<Add option="-Wl,-rpath,\\$$ORIGIN/externals/lib/linux32" />
 					<Add library="sfml-window-s" />
 					<Add library="sfml-graphics-s" />
 					<Add library="sfml-system-s" />

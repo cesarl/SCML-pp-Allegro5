@@ -34,6 +34,8 @@ void main_loop(vector<string>& data_files)
     float angle = 0.0f;
     float scale = 1.0f;
     
+    bool paused = false;
+    
     bool done = false;
     SDL_Event event;
     int dt_ms = 0;
@@ -57,6 +59,38 @@ void main_loop(vector<string>& data_files)
                     {
                         (*e)->startAnimation(rand()%data.getNumAnimations((*e)->entity));
                     }
+                }
+                else if(event.key.keysym.sym == SDLK_d)
+                {
+                    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+                    {
+                        (*e)->update(1);
+                    }
+                }
+                else if(event.key.keysym.sym == SDLK_f)
+                {
+                    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+                    {
+                        (*e)->update(5);
+                    }
+                }
+                else if(event.key.keysym.sym == SDLK_g)
+                {
+                    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+                    {
+                        (*e)->update(50);
+                    }
+                }
+                else if(event.key.keysym.sym == SDLK_h)
+                {
+                    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+                    {
+                        (*e)->update(100);
+                    }
+                }
+                else if(event.key.keysym.sym == SDLK_p)
+                {
+                    paused = !paused;
                 }
                 else if(event.key.keysym.sym == SDLK_RETURN)
                 {
@@ -111,9 +145,12 @@ void main_loop(vector<string>& data_files)
         else if(keystates[SDLK_PERIOD])
             angle += 100*dt_ms/1000.0f;
         
-        for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+        if(!paused)
         {
-            (*e)->update(dt_ms);
+            for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+            {
+                (*e)->update(dt_ms);
+            }
         }
         
         GPU_ClearRGBA(screen, 255, 255, 255, 255);
