@@ -12,9 +12,20 @@ USING_NS_CC;
 
 
 
-class Test : public cocos2d::CCLayer
+class Test : public cocos2d::CCLayerColor
 {
 public:
+    
+    size_t data_file_index;
+    SCML::Data data;
+    FileSystem fs;
+    list<Entity*> entities;
+    
+    float x;
+    float y;
+    float angle;
+    float scale;
+
     virtual bool init();  
 
     static cocos2d::CCScene* scene();
@@ -52,15 +63,41 @@ bool Test::init()
     bool bRet = false;
     do 
     {
-        //////////////////////////////////////////////////////////////////////////
         // super init first
-        //////////////////////////////////////////////////////////////////////////
-
         CC_BREAK_IF(! CCLayer::init());
 
-		/*Entity *animator = Entity::create("Example.SCML");
-
+        // Set up scene
+        initWithColor(ccc4(255,255,255,255));
+        
+        data_file_index = 0;
+        //SCML::Data data(data_files[data_file_index]);
+        data.load("samples/monster/Example.SCML");
+        data.log();
+        
+        fs.load(&data);
+        printf("Loaded %zu images.\n", fs.images.size());
+        
+        x = 400.0f;
+        y = 300.0f;
+        angle = 0.0f;
+        scale = 1.0f;
+        
+        int i = 0;
+        for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
+        {
+            Entity* entity = new Entity(&data, e->first);
+            entity->setFileSystem(&fs);
+            entity->autorelease();
+            entity->setPosition(ccp(x, y));
+            entities.push_back(entity);
+            this->addChild(entity, 0, 100+i);
+            i++;
+        }
+        printf("Loaded %zu entities.\n", entities.size());
+                                    
+		/*Entity *animator = new Entity;
 		CC_BREAK_IF(! animator);
+		animator->autorelease();
 
 		animator->setPosition(ccp(400, 300));
 		//animator->setScale(0.8f);
@@ -141,7 +178,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     {
         // iphone
         
-        // try to enable retina on device
+        // try to enable retina on device (Interface does not even exist on Linux!)
         if (true)//true == CCDirector::sharedDirector()->enableRetinaDisplay(true))
         {
             // iphone hd
@@ -160,10 +197,8 @@ bool AppDelegate::applicationDidFinishLaunching()
         CCEGLView::sharedOpenGLView()->setDesignResolutionSize(1600, 1200, kResolutionNoBorder);
     }
 
-	//pDirector->enableRetinaDisplay(true);
-
     // turn on display FPS
-    pDirector->setDisplayStats(true);
+    //pDirector->setDisplayStats(true);
 
     // set FPS. the default value is 1.0/60 if you don't call this
     pDirector->setAnimationInterval(1.0 / 60);
@@ -199,15 +234,15 @@ void main_loop(vector<string>& data_files)
 
 
 
-// 500 is enough?
-#define MAXPATHLEN 500
+
 
 bool init(unsigned int w, unsigned int h)
 {
     
     // get application path
     /*int length;
-    char fullpath[MAXPATHLEN];
+    // 500 is enough?
+    char fullpath[500];
     length = readlink("/proc/self/exe", fullpath, sizeof(fullpath));
     fullpath[length] = '\0';
 
@@ -216,8 +251,7 @@ bool init(unsigned int w, unsigned int h)
     resourcePath += "/../../../Resources/";*/
     
     
-    AppDelegate* app = new AppDelegate;  // Cocos2d-x stores this secretly...
-    (void)app;
+    (void)new AppDelegate;  // Cocos2d-x stores this secretly...
     //CCApplication::sharedApplication()->setResourceRootPath(resourcePath.c_str());
     CCEGLView* eglView = CCEGLView::sharedOpenGLView();
     eglView->setFrameSize(800, 600);
@@ -227,7 +261,7 @@ bool init(unsigned int w, unsigned int h)
 
 void quit()
 {
-    //delete CCApplication::sharedApplication();
+    delete CCApplication::sharedApplication();
 }
 
 

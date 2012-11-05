@@ -84,7 +84,7 @@ FileSystem* Entity::setFileSystem(FileSystem* fs)
 
 void Entity::convert_to_SCML_coords(float& x, float& y, float& angle)
 {
-    y = -y;
+    //y = -y;
     angle = 360 - angle;
 }
 
@@ -96,15 +96,15 @@ std::pair<unsigned int, unsigned int> Entity::getImageDimensions(int folderID, i
 // (x, y) specifies the center point of the image.  x, y, and angle are in SCML coordinate system (+x to the right, +y up, +angle counter-clockwise)
 void Entity::draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y)
 {
-    y = -y;
+    //y = -y;
     angle = 360 - angle;
     
     CCSprite* img = file_system->getImage(folderID, fileID);
     if(img == NULL)
         return;
 
-	x+= this->getPositionX();
-	y+= this->getPositionY();
+	x+= getPositionX();
+	y+= getPositionY();
 
 	img->setPosition(ccp(x,y));
 	img->setRotation(angle);
@@ -114,6 +114,15 @@ void Entity::draw_internal(int folderID, int fileID, float x, float y, float ang
 	img->visit();
 }
 
+void Entity::update(float dt)
+{
+	SCML::Entity::update(dt * 1000.0f);
+}
+
+void Entity::draw()
+{		  
+	SCML::Entity::draw(getPositionX(), getPositionY(), getRotation(), getScale(), getScale());
+}
 
 
 
