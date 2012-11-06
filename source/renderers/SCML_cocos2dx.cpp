@@ -103,8 +103,8 @@ void Entity::draw_internal(int folderID, int fileID, float x, float y, float ang
     if(img == NULL)
         return;
 
-	x+= getPositionX();
-	y+= getPositionY();
+	x += getPositionX();
+	y += getPositionY();
 
 	img->setPosition(ccp(x,y));
 	img->setRotation(angle);
@@ -112,16 +112,6 @@ void Entity::draw_internal(int folderID, int fileID, float x, float y, float ang
 	img->setScaleY(scale_y);
 
 	img->visit();
-}
-
-void Entity::update(float dt)
-{
-	SCML::Entity::update(dt * 1000.0f);
-}
-
-void Entity::draw()
-{		  
-	SCML::Entity::draw(getPositionX(), getPositionY(), getRotation(), getScale(), getScale());
 }
 
 

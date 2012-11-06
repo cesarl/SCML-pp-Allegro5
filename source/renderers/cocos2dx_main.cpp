@@ -26,13 +26,15 @@ public:
     float angle;
     float scale;
 
-    virtual bool init();  
+    virtual bool init();
 
     static cocos2d::CCScene* scene();
     void menuCloseCallback(CCObject* pSender);
     CREATE_FUNC(Test);
 
 	bool ccTouchBegan(cocos2d::CCTouch* touch, cocos2d::CCEvent* event);
+	void update(float dt);
+	void draw();
 };
 
 
@@ -82,6 +84,8 @@ bool Test::init()
         angle = 0.0f;
         scale = 1.0f;
         
+        scheduleUpdate();
+        
         int i = 0;
         for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
         {
@@ -89,20 +93,12 @@ bool Test::init()
             entity->setFileSystem(&fs);
             entity->autorelease();
             entity->setPosition(ccp(x, y));
+            //entity->scheduleUpdate();
             entities.push_back(entity);
             this->addChild(entity, 0, 100+i);
             i++;
         }
         printf("Loaded %zu entities.\n", entities.size());
-                                    
-		/*Entity *animator = new Entity;
-		CC_BREAK_IF(! animator);
-		animator->autorelease();
-
-		animator->setPosition(ccp(400, 300));
-		//animator->setScale(0.8f);
-		
-		this->addChild(animator, 0, 100);*/
 
 
 		CCDirector* pDirector = CCDirector::sharedDirector();
@@ -115,6 +111,28 @@ bool Test::init()
     return bRet;
 }
 
+void Test::update(float dt)
+{
+    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+    {
+        Entity* entity = *e;
+        
+        entity->setPosition(ccp(x, y));
+        entity->setRotation(angle);
+        entity->setScale(scale);
+        entity->SCML::Entity::update(dt * 1000.0f);
+    }
+}
+
+void Test::draw()
+{
+    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+    {
+        Entity* entity = *e;
+        entity->SCML::Entity::draw(entity->getPositionX(), entity->getPositionY(), entity->getRotation(), entity->getScale(), entity->getScale());
+    }
+}
+
 void Test::menuCloseCallback(CCObject* pSender)
 {
     // "close" menu item clicked
@@ -124,10 +142,50 @@ void Test::menuCloseCallback(CCObject* pSender)
 
 bool Test::ccTouchBegan(CCTouch* touch, CCEvent* event)
 {
-	/*Entity *animator = (Entity *)this->getChildByTag(100);
-
-	if (animator)
-		animator->PlayNext();*/
+    x = touch->getLocation().x;
+    y = touch->getLocation().y;
+    printf("x,y: (%.2f,%.2f)\n", x, y);
+    
+    // Begin new animation
+    for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+    {
+        (*e)->startAnimation(rand()%data.getNumAnimations((*e)->entity));
+    }
+    
+    // Load new entities
+    /*if(false)
+    {
+        // Destroy all of our data
+        for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+        {
+            delete (*e);
+        }
+        entities.clear();
+        
+        fs.clear();
+        data.clear();
+        
+        // Get next data file
+        data_file_index++;
+        if(data_file_index >= data_files.size())
+            data_file_index = 0;
+        
+        // Load new data
+        data.load(data_files[data_file_index]);
+        data.log();
+        
+        fs.load(&data);
+        printf("Loaded %zu images.\n", fs.images.size());
+        
+        for(map<int, SCML::Data::Entity*>::iterator e = data.entities.begin(); e != data.entities.end(); e++)
+        {
+            Entity* entity = new Entity(&data, e->first);
+            entity->setFileSystem(&fs);
+            entity->setScreen(screen);
+            entities.push_back(entity);
+        }
+        printf("Loaded %zu entities.\n", entities.size());
+    }*/
 
     return true;
 }
@@ -194,7 +252,8 @@ bool AppDelegate::applicationDidFinishLaunching()
         // android, windows, blackberry, linux or mac
         // use 960*640 resources as design resolution size
         CCFileUtils::sharedFileUtils()->setResourceDirectory("iphonehd");
-        CCEGLView::sharedOpenGLView()->setDesignResolutionSize(1600, 1200, kResolutionNoBorder);
+        //CCEGLView::sharedOpenGLView()->setDesignResolutionSize(1600, 1200, kResolutionNoBorder);
+        CCEGLView::sharedOpenGLView()->setDesignResolutionSize(800, 600, kResolutionNoBorder);
     }
 
     // turn on display FPS

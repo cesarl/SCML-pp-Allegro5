@@ -2479,6 +2479,14 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
     
     int nextKeyID = getNextKeyID(animation, key);
     
+    // Build up the bone transform hierarchy
+    Transform base_transform(x, y, angle, scale_x, scale_y);
+    if(bone_transform_state.should_rebuild(entity, animation, key, nextKeyID, time, base_transform))
+    {
+        bone_transform_state.rebuild(entity, animation, key, nextKeyID, time, this, base_transform);
+    }
+    
+    
     // Go through each object
     for(map<int, Animation::Mainline::Key::Object_Container>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
     {
@@ -2604,9 +2612,9 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
     if(ref2 == NULL)
         ref2 = ref1;
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key* t_key2 = (ref2 == NULL? NULL : getTimelineKey(animation, ref2->timeline, ref2->key));
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
     Animation::Timeline::Key::Object* obj1 = getTimelineObject(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key::Object* obj2 = (ref2 == NULL? NULL : getTimelineObject(animation, ref2->timeline, ref2->key));
+    Animation::Timeline::Key::Object* obj2 = getTimelineObject(animation, ref2->timeline, ref2->key);
     if(t_key2 == NULL)
         t_key2 = t_key1;
     if(obj2 == NULL)
@@ -2617,71 +2625,19 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         if(t_key2->time != t_key1->time)
             t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
         
-        // Get parent bone hierarchy
-        list<Animation::Timeline::Key*> parents1;
-        list<Animation::Timeline::Key*> parents2;
-        // Go through all the parents
-        for(Animation::Mainline::Key::Bone_Ref* bone_ref = getBoneRef(animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = getBoneRef(animation, ref1->key, bone_ref->parent))
-        {
-            Animation::Timeline::Key* k = getTimelineKey(animation, bone_ref->timeline, bone_ref->key);
-            if(k == NULL || k->has_object)
-                break;
-            
-            parents1.push_front(k);
-        }
-        for(Animation::Mainline::Key::Bone_Ref* bone_ref = getBoneRef(animation, ref2->key, ref2->parent); bone_ref != NULL; bone_ref = getBoneRef(animation, ref2->key, bone_ref->parent))
-        {
-            Animation::Timeline::Key* k = getTimelineKey(animation, bone_ref->timeline, bone_ref->key);
-            if(k == NULL || k->has_object)
-                break;
-            
-            parents2.push_front(k);
-        }
-        
-        
         /*SDL_Color green = {0, 255, 0, 255};
         SDL_Color blue = {0, 0, 255, 255};*/
         
-        float parent_x = 0.0f;
-        float parent_y = 0.0f;
-        float parent_angle = angle;
-        float parent_scale_x = scale_x;
-        float parent_scale_y = scale_y;
-        list<Animation::Timeline::Key*>::iterator b_key1 = parents1.begin();
-        list<Animation::Timeline::Key*>::iterator b_key2 = parents2.begin();
+        // Get parent bone transform
+        Transform parent_transform;
         
-        while(b_key1 != parents1.end() && b_key2 != parents2.end())
+        if(ref1->parent < 0)
         {
-            Animation::Timeline::Key::Bone* bone1 = &(*b_key1)->bone;
-            Animation::Timeline::Key::Bone* bone2 = &(*b_key2)->bone;
-            
-            // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
-            // However, the positioning is affected by rotation.
-            
-            float bx = lerp(bone1->x, bone2->x, t) * parent_scale_x;
-            float by = lerp(bone1->y, bone2->y, t) * parent_scale_y;
-            rotate_point(bx, by, parent_angle, parent_x, parent_y);
-            
-            float angle_b;
-            if((*b_key1)->spin > 0 && bone1->angle > bone2->angle)
-                angle_b = lerp(bone1->angle, bone2->angle + 360, t);
-            else if((*b_key1)->spin < 0 && bone1->angle < bone2->angle)
-                angle_b = lerp(bone1->angle, bone2->angle - 360, t);
-            else
-                angle_b = lerp(bone1->angle, bone2->angle, t);
-            
-            parent_angle += angle_b;
-            parent_x = bx;
-            parent_y = by;
-            
-            // debug draw bone
-            /*GPU_Line(GPU_GetDisplayTarget(), x + parent_x, -(y + parent_y), x + parent_x + 50*cos(parent_angle*M_PI/180), -(y + parent_y + 50*sin(parent_angle*M_PI/180)), green);
-            GPU_Circle(GPU_GetDisplayTarget(), x + bx, -(y + by), 5, blue);*/
-            parent_scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
-            parent_scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
-            
-            b_key1++;
-            b_key2++;
+            parent_transform = bone_transform_state.base_transform;
+        }
+        else
+        {
+            parent_transform = bone_transform_state.transforms[ref1->parent];
         }
         
         
@@ -2705,13 +2661,13 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
         
         // Transform the sprite by the parent transform.
-        r_x *= parent_scale_x;
-        r_y *= parent_scale_y;
-        rotate_point(r_x, r_y, parent_angle, parent_x, parent_y);
+        r_x *= parent_transform.scale_x;
+        r_y *= parent_transform.scale_y;
+        rotate_point(r_x, r_y, parent_transform.angle, parent_transform.x, parent_transform.y);
         
-        angle_i += parent_angle;
-        scale_x_i *= parent_scale_x;
-        scale_y_i *= parent_scale_y;
+        angle_i += parent_transform.angle;
+        scale_x_i *= parent_transform.scale_x;
+        scale_y_i *= parent_transform.scale_y;
         
         // debug draw transform from parent
         /*SDL_Color orange = {255, 168, 0, 255};
@@ -2734,7 +2690,7 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         float sprite_y = -offset_y*scale_y;
         rotate_point(sprite_x, sprite_y, angle_i, r_x, r_y);
         
-        draw_internal(obj1->folder, obj1->file, x + sprite_x, y + sprite_y, angle_i, scale_x_i, scale_y_i);
+        draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, angle_i, scale_x_i, scale_y_i);
         
         // debug draw pivot
         /*SDL_Color red = {255, 0, 0, 255};
@@ -2742,6 +2698,162 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         
     }
 }
+
+
+
+
+Entity::Transform::Transform()
+    : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f)
+{}
+
+Entity::Transform::Transform(float x, float y, float angle, float scale_x, float scale_y)
+    : x(x), y(y), angle(angle), scale_x(scale_x), scale_y(scale_y)
+{}
+
+bool Entity::Transform::operator==(const Transform& t) const
+{
+    return (x == t.x && y == t.y && angle == t.angle && scale_x == t.scale_x && scale_y == t.scale_y);
+}
+
+bool Entity::Transform::operator!=(const Transform& t) const
+{
+    return !(*this == t);
+}
+
+
+
+
+Entity::Bone_Transform_State::Bone_Transform_State()
+    : entity(-1), animation(-1), key(-1), nextKey(-1), time(-1)
+{}
+
+bool Entity::Bone_Transform_State::should_rebuild(int entity, int animation, int key, int nextKey, int time, const Transform& base_transform)
+{
+    return (entity != this->entity || animation != this->animation || key != this->key || time != this->time || this->nextKey != nextKey || this->base_transform != base_transform);
+}
+
+void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, int nextKey, int time, Entity* entity_ptr, const Transform& base_transform)
+{
+    if(entity_ptr == NULL)
+    {
+        this->entity = -1;
+        this->animation = -1;
+        this->key = -1;
+        this->nextKey = -1;
+        this->time = -1;
+        return;
+    }
+    
+    this->entity = entity;
+    this->animation = animation;
+    this->key = key;
+    this->nextKey = nextKey;
+    this->time = time;
+    this->base_transform = base_transform;
+    transforms.clear();
+    
+    Entity::Animation::Mainline::Key* key_ptr = entity_ptr->getKey(animation, key);
+    
+    // Resize the transform vector according to the biggest bone index
+    int max_index = -1;
+    for(map<int, Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key_ptr->bones.begin(); e != key_ptr->bones.end(); e++)
+    {
+        int index = -1;
+        if(e->second.hasBone_Ref())
+        {
+            index = e->second.bone_ref->id;
+        }
+        else if(e->second.hasBone())
+        {
+            index = e->second.bone->id;
+        }
+        
+        if(max_index < index)
+            max_index = index;
+    }
+    
+    if(max_index <= 0)
+        return;
+    
+    transforms.resize(max_index+1);
+    
+    // Calculate and store the transforms
+    for(map<int, Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key_ptr->bones.begin(); e != key_ptr->bones.end(); e++)
+    {
+        if(e->second.hasBone_Ref())
+        {
+            // Assuming that each bone corresponds to bones of the same id...
+            Animation::Mainline::Key::Bone_Ref* ref1 = e->second.bone_ref;
+            Animation::Mainline::Key::Bone_Ref* ref2 = entity_ptr->getBoneRef(animation, nextKey, e->first);
+            
+            // Dereference object_refs
+            if(ref2 == NULL)
+                ref2 = ref1;
+            Animation::Timeline::Key* t_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
+            Animation::Timeline::Key* t_key2 = entity_ptr->getTimelineKey(animation, ref2->timeline, ref2->key);
+            if(t_key2 == NULL)
+                t_key2 = t_key1;
+            if(t_key1 != NULL && t_key2 != NULL)
+            {
+                float t = 0.0f;
+                if(t_key2->time != t_key1->time)
+                    t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
+                
+                Entity::Animation::Timeline::Key* b_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
+                Entity::Animation::Timeline::Key* b_key2 = entity_ptr->getTimelineKey(animation, ref2->timeline, ref2->key);
+                Entity::Animation::Timeline::Key::Bone* bone1 = &b_key1->bone;
+                Entity::Animation::Timeline::Key::Bone* bone2 = &b_key2->bone;
+                
+                
+                Transform parent_transform;
+                if(ref1->parent < 0)
+                {
+                    parent_transform = base_transform;
+                }
+                else
+                {
+                    // Assuming that bones come in hierarchical order so that the parents have already been processed.
+                    parent_transform = transforms[ref1->parent];
+                }
+                
+                
+                // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
+                // However, the positioning is affected by rotation.
+                
+                float bx = lerp(bone1->x, bone2->x, t) * parent_transform.scale_x;
+                float by = lerp(bone1->y, bone2->y, t) * parent_transform.scale_y;
+                rotate_point(bx, by, parent_transform.angle, parent_transform.x, parent_transform.y);
+                
+                float angle_b;
+                if(b_key1->spin > 0 && bone1->angle > bone2->angle)
+                    angle_b = lerp(bone1->angle, bone2->angle + 360, t);
+                else if(b_key1->spin < 0 && bone1->angle < bone2->angle)
+                    angle_b = lerp(bone1->angle, bone2->angle - 360, t);
+                else
+                    angle_b = lerp(bone1->angle, bone2->angle, t);
+                
+                parent_transform.angle += angle_b;
+                parent_transform.x = bx;
+                parent_transform.y = by;
+                
+                parent_transform.scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
+                parent_transform.scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
+                
+                transforms[ref1->id] = parent_transform;
+                
+            }
+            
+        }
+        else if(e->second.hasBone())
+        {
+            // FIXME: Implement temp bones
+            printf("FIXME: Temp bones not implemented!\n");
+        }
+    }
+    
+}
+
+
 
 
 Entity::Animation::Animation(SCML::Data::Entity::Animation* animation)
@@ -3088,6 +3200,8 @@ Entity::Animation::Timeline::Key::Bone* Entity::getTimelineBone(int animation, i
     
     return &k->second->bone;
 }
+
+
 
 
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <vector>
 #include "tinyxml.h"
 
 /*! \brief Namespace for SCMLpp
@@ -742,7 +743,41 @@ public:
 
     /*! Time (in milliseconds) tracking the position of the animation from its beginning. */
     int time;
-
+    
+    class Transform
+    {
+        public:
+        
+        float x, y;
+        float angle;
+        float scale_x, scale_y;
+        
+        Transform();
+        Transform(float x, float y, float angle, float scale_x, float scale_y);
+        
+        bool operator==(const Transform& t) const;
+        bool operator!=(const Transform& t) const;
+    };
+    
+    class Bone_Transform_State
+    {
+        public:
+        int entity;
+        int animation;
+        int key;
+        int nextKey;
+        int time;
+        
+        Transform base_transform;
+        std::vector<Transform> transforms;
+        
+        Bone_Transform_State();
+        
+        bool should_rebuild(int entity, int animation, int key, int nextKeyID, int time, const Transform& base_transform);
+        void rebuild(int entity, int animation, int key, int nextKeyID, int time, Entity* entity_ptr, const Transform& base_transform);
+    };
+    
+    Bone_Transform_State bone_transform_state;
 
     std::string name;
 

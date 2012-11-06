@@ -31,13 +31,6 @@ class Entity : public cocos2d::CCNode, public SCML::Entity
     public:
     
     FileSystem* file_system;
-	
-	/*static Entity* create(const char* scmlFileName)
-	{
-		Entity* node = new Entity;
-		node->autorelease();
-		return node;
-	}*/
     
     Entity();
     Entity(SCML::Data* data, int entity, int animation = 0, int key = 0);
@@ -47,10 +40,6 @@ class Entity : public cocos2d::CCNode, public SCML::Entity
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
     virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
     virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y);
-    
-    // From CCNode
-    virtual void update(float dt);
-    virtual void draw();
 };
 
 }
