@@ -2506,67 +2506,41 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
 }
 
 
-void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj)
+void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj1)
 {
-    //SDL_Color green = {0, 255, 0, 255};
-    //SDL_Color blue = {0, 0, 255, 255};
-    
     // Get parent bone transform
     Transform parent_transform;
     
-    if(obj->parent < 0)
-    {
+    if(obj1->parent < 0)
         parent_transform = bone_transform_state.base_transform;
-    }
     else
-    {
-        parent_transform = bone_transform_state.transforms[obj->parent];
-    }
+        parent_transform = bone_transform_state.transforms[obj1->parent];
     
     
-    
-    // 'spin' is based on what you are coming from (key1)
-    float angle_i = obj->angle;
-    float scale_x_i = obj->scale_x;
-    float scale_y_i = obj->scale_y;
-    
-    // Relative object position
-    float r_x = obj->x;
-    float r_y = obj->y;
-    
-    
+    // Set object transform
+    Transform obj_transform(obj1->x, obj1->y, obj1->angle, obj1->scale_x, obj1->scale_y);
     
     // Transform the sprite by the parent transform.
-    r_x *= parent_transform.scale_x;
-    r_y *= parent_transform.scale_y;
-    rotate_point(r_x, r_y, parent_transform.angle, parent_transform.x, parent_transform.y);
-    
-    angle_i += parent_transform.angle;
-    scale_x_i *= parent_transform.scale_x;
-    scale_y_i *= parent_transform.scale_y;
-    
-    // debug draw transform from parent
-    /*SDL_Color orange = {255, 168, 0, 255};
-    GPU_Line(screen, x + parent_x, y + parent_y, x + r_x, y + r_y, orange);*/
+    obj_transform.apply_parent_transform(parent_transform);
     
     
     // Transform the sprite by its own transform now.
     
+    float pivot_x_ratio = obj1->pivot_x;
+    float pivot_y_ratio = obj1->pivot_y;
     
     // No image tweening
-    std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj->folder, obj->file);
-    
-    float pivot_x_ratio = obj->pivot_x;
-    float pivot_y_ratio = obj->pivot_y;
+    std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
     
     // Rotate about the pivot point and draw from the center of the image
     float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
     float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
     float sprite_x = -offset_x*scale_x;
     float sprite_y = -offset_y*scale_y;
-    rotate_point(sprite_x, sprite_y, angle_i, r_x, r_y);
+    rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
     
-    draw_internal(obj->folder, obj->file, x + sprite_x, y + sprite_y, angle_i, scale_x_i, scale_y_i);
+    // Let the renderer draw it
+    draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
 }
 
 
@@ -2585,81 +2559,45 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         obj2 = obj1;
     if(t_key1 != NULL && t_key2 != NULL && obj1 != NULL && obj2 != NULL)
     {
+        // Get interpolation (tweening) factor
         float t = 0.0f;
         if(t_key2->time != t_key1->time)
             t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
         
-        /*SDL_Color green = {0, 255, 0, 255};
-        SDL_Color blue = {0, 0, 255, 255};*/
-        
         // Get parent bone transform
         Transform parent_transform;
-        
         if(ref1->parent < 0)
-        {
             parent_transform = bone_transform_state.base_transform;
-        }
         else
-        {
             parent_transform = bone_transform_state.transforms[ref1->parent];
-        }
         
+        // Set object transform
+        Transform obj_transform(obj1->x, obj1->y, obj1->angle, obj1->scale_x, obj1->scale_y);
         
-        
-        
-        // 'spin' is based on what you are coming from (key1)
-        float angle_i;
-        if(t_key1->spin > 0 && obj1->angle > obj2->angle)
-            angle_i = lerp(obj1->angle, obj2->angle + 360, t);
-        else if(t_key1->spin < 0 && obj1->angle < obj2->angle)
-            angle_i = lerp(obj1->angle, obj2->angle - 360, t);
-        else
-            angle_i = lerp(obj1->angle, obj2->angle, t);
-        float scale_x_i = lerp(obj1->scale_x, obj2->scale_x, t);
-        float scale_y_i = lerp(obj1->scale_y, obj2->scale_y, t);
-        
-        // Relative object position
-        float r_x = lerp(obj1->x, obj2->x, t);
-        float r_y = lerp(obj1->y, obj2->y, t);
-        
-        
+        // Tween with next key's object
+        obj_transform.lerp(Transform(obj2->x, obj2->y, obj2->angle, obj2->scale_x, obj2->scale_y), t, t_key1->spin);
         
         // Transform the sprite by the parent transform.
-        r_x *= parent_transform.scale_x;
-        r_y *= parent_transform.scale_y;
-        rotate_point(r_x, r_y, parent_transform.angle, parent_transform.x, parent_transform.y);
-        
-        angle_i += parent_transform.angle;
-        scale_x_i *= parent_transform.scale_x;
-        scale_y_i *= parent_transform.scale_y;
-        
-        // debug draw transform from parent
-        /*SDL_Color orange = {255, 168, 0, 255};
-        GPU_Line(GPU_GetDisplayTarget(), x + parent_x, -(y + parent_y), x + r_x, -(y + r_y), orange);*/
+        obj_transform.apply_parent_transform(parent_transform);
         
         
         // Transform the sprite by its own transform now.
         
+        float pivot_x_ratio = lerp(obj1->pivot_x, obj2->pivot_x, t);
+        float pivot_y_ratio = lerp(obj1->pivot_y, obj2->pivot_y, t);
         
         // No image tweening
         std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
-        
-        float pivot_x_ratio = lerp(obj1->pivot_x, obj2->pivot_x, t);
-        float pivot_y_ratio = lerp(obj1->pivot_y, obj2->pivot_y, t);
         
         // Rotate about the pivot point and draw from the center of the image
         float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
         float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
         float sprite_x = -offset_x*scale_x;
         float sprite_y = -offset_y*scale_y;
-        rotate_point(sprite_x, sprite_y, angle_i, r_x, r_y);
+        rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
         
-        draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, angle_i, scale_x_i, scale_y_i);
-        
-        // debug draw pivot
-        /*SDL_Color red = {255, 0, 0, 255};
-        GPU_CircleFilled(GPU_GetDisplayTarget(), x + r_x, -(y + r_y), 3, red);*/
-        
+        // Let the renderer draw it
+        draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
     }
 }
 
@@ -2682,6 +2620,34 @@ bool Entity::Transform::operator==(const Transform& t) const
 bool Entity::Transform::operator!=(const Transform& t) const
 {
     return !(*this == t);
+}
+
+void Entity::Transform::lerp(const Transform& transform, float t, int spin)
+{
+    x = SCML::lerp(x, transform.x, t);
+    y = SCML::lerp(y, transform.y, t);
+    
+    // 'spin' is based on what you are coming from (key1)
+    if(spin > 0 && angle > transform.angle)
+        angle = SCML::lerp(angle, transform.angle + 360, t);
+    else if(spin < 0 && angle < transform.angle)
+        angle = SCML::lerp(angle, transform.angle - 360, t);
+    else
+        angle = SCML::lerp(angle, transform.angle, t);
+        
+    scale_x = SCML::lerp(scale_x, transform.scale_x, t);
+    scale_y = SCML::lerp(scale_y, transform.scale_y, t);
+}
+
+void Entity::Transform::apply_parent_transform(const Transform& parent)
+{
+    x *= parent.scale_x;
+    y *= parent.scale_y;
+    rotate_point(x, y, parent.angle, parent.x, parent.y);
+    
+    angle += parent.angle;
+    scale_x *= parent.scale_x;
+    scale_y *= parent.scale_y;
 }
 
 
@@ -2724,13 +2690,9 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
     {
         int index = -1;
         if(e->second.hasBone_Ref())
-        {
             index = e->second.bone_ref->id;
-        }
         else if(e->second.hasBone())
-        {
             index = e->second.bone->id;
-        }
         
         if(max_index < index)
             max_index = index;
@@ -2769,49 +2731,46 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
                 Entity::Animation::Timeline::Key::Bone* bone2 = &b_key2->bone;
                 
                 
+                // Assuming that bones come in hierarchical order so that the parents have already been processed.
                 Transform parent_transform;
                 if(ref1->parent < 0)
-                {
                     parent_transform = base_transform;
-                }
                 else
-                {
-                    // Assuming that bones come in hierarchical order so that the parents have already been processed.
                     parent_transform = transforms[ref1->parent];
-                }
                 
+                // Set bone transform
+                Transform b_transform(bone1->x, bone1->y, bone1->angle, bone1->scale_x, bone1->scale_y);
                 
-                // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
-                // However, the positioning is affected by rotation.
+                // Tween with next key's bone
+                b_transform.lerp(Transform(bone2->x, bone2->y, bone2->angle, bone2->scale_x, bone2->scale_y), t, b_key1->spin);
                 
-                float bx = lerp(bone1->x, bone2->x, t) * parent_transform.scale_x;
-                float by = lerp(bone1->y, bone2->y, t) * parent_transform.scale_y;
-                rotate_point(bx, by, parent_transform.angle, parent_transform.x, parent_transform.y);
+                // Transform the bone by the parent transform.
+                b_transform.apply_parent_transform(parent_transform);
                 
-                float angle_b;
-                if(b_key1->spin > 0 && bone1->angle > bone2->angle)
-                    angle_b = lerp(bone1->angle, bone2->angle + 360, t);
-                else if(b_key1->spin < 0 && bone1->angle < bone2->angle)
-                    angle_b = lerp(bone1->angle, bone2->angle - 360, t);
-                else
-                    angle_b = lerp(bone1->angle, bone2->angle, t);
-                
-                parent_transform.angle += angle_b;
-                parent_transform.x = bx;
-                parent_transform.y = by;
-                
-                parent_transform.scale_x *= lerp(bone1->scale_x, bone2->scale_x, t);
-                parent_transform.scale_y *= lerp(bone1->scale_y, bone2->scale_y, t);
-                
-                transforms[ref1->id] = parent_transform;
+                transforms[ref1->id] = b_transform;
                 
             }
             
         }
         else if(e->second.hasBone())
         {
-            // FIXME: Implement temp bones
-            printf("FIXME: Temp bones not implemented!\n");
+            Animation::Mainline::Key::Bone* bone1 = e->second.bone;
+            
+            // Assuming that bones come in hierarchical order so that the parents have already been processed.
+            Transform parent_transform;
+            if(bone1->parent < 0)
+                parent_transform = base_transform;
+            else
+                parent_transform = transforms[bone1->parent];
+            
+            // Set bone transform
+            Transform b_transform(bone1->x, bone1->y, bone1->angle, bone1->scale_x, bone1->scale_y);
+            
+            // Transform the bone by the parent transform.
+            b_transform.apply_parent_transform(parent_transform);
+            
+            transforms[bone1->id] = b_transform;
+            
         }
     }
     

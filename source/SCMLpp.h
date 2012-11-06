@@ -757,6 +757,9 @@ public:
         
         bool operator==(const Transform& t) const;
         bool operator!=(const Transform& t) const;
+        
+        void lerp(const Transform& transform, float t, int spin);
+        void apply_parent_transform(const Transform& parent);
     };
     
     class Bone_Transform_State
