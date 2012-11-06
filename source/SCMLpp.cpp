@@ -2508,6 +2508,23 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
 
 void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj)
 {
+    //SDL_Color green = {0, 255, 0, 255};
+    //SDL_Color blue = {0, 0, 255, 255};
+    
+    // Get parent bone transform
+    Transform parent_transform;
+    
+    if(obj->parent < 0)
+    {
+        parent_transform = bone_transform_state.base_transform;
+    }
+    else
+    {
+        parent_transform = bone_transform_state.transforms[obj->parent];
+    }
+    
+    
+    
     // 'spin' is based on what you are coming from (key1)
     float angle_i = obj->angle;
     float scale_x_i = obj->scale_x;
@@ -2517,69 +2534,16 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
     float r_x = obj->x;
     float r_y = obj->y;
     
-    // Get parent bone hierarchy
-    list<Animation::Timeline::Key*> parents;
-    // Go through all the parents
-    // TODO: Get the right parentage
-    /*for(Animation::Mainline::Key::Bone_Ref* bone_ref = data->getBoneRef(entity, animation, ref1->key, ref1->parent); bone_ref != NULL; bone_ref = data->getBoneRef(entity, animation, ref1->key, bone_ref->parent))
-    {
-        Animation::Timeline::Key* k = data->getTimelineKey(entity, animation, bone_ref->timeline, bone_ref->key);
-        if(k == NULL || k->has_object)
-            break;
-        
-        parents.push_front(k);
-    }*/
-    
-    
-    //SDL_Color green = {0, 255, 0, 255};
-    //SDL_Color blue = {0, 0, 255, 255};
-    
-    float parent_x = 0.0f;
-    float parent_y = 0.0f;
-    float parent_angle = angle;
-    float parent_scale_x = scale_x;
-    float parent_scale_y = scale_y;
-    list<Animation::Timeline::Key*>::iterator b_key = parents.begin();
-    
-    while(b_key != parents.end())
-    {
-        Animation::Timeline::Key::Bone* bone = &(*b_key)->bone;
-        
-        // The transforms are definitely composed without matrices.  Evidence: Rotation does not affect scaling direction.
-        // However, the positioning is affected by rotation.
-        
-        float bx = bone->x * parent_scale_x;
-        float by = bone->y * parent_scale_y;
-        rotate_point(bx, by, parent_angle, parent_x, parent_y);
-        
-        float angle_b = bone->angle;
-        
-        parent_angle += angle_b;
-        parent_x = bx;
-        parent_y = by;
-        
-        // debug draw bone
-        /*GPU_Line(screen, x + parent_x, y + parent_y, x + parent_x + 50*cos(parent_angle*M_PI/180), y + parent_y + 50*sin(parent_angle*M_PI/180), green);
-        GPU_Circle(screen, x + bx, y + by, 5, blue);*/
-        parent_scale_x *= bone->scale_x;
-        parent_scale_y *= bone->scale_y;
-        
-        b_key++;
-    }
-    
-    
-    
-    
     
     
     // Transform the sprite by the parent transform.
-    r_x *= parent_scale_x;
-    r_y *= parent_scale_y;
-    rotate_point(r_x, r_y, parent_angle, parent_x, parent_y);
+    r_x *= parent_transform.scale_x;
+    r_y *= parent_transform.scale_y;
+    rotate_point(r_x, r_y, parent_transform.angle, parent_transform.x, parent_transform.y);
     
-    angle_i += parent_angle;
-    scale_x_i *= parent_scale_x;
-    scale_y_i *= parent_scale_y;
+    angle_i += parent_transform.angle;
+    scale_x_i *= parent_transform.scale_x;
+    scale_y_i *= parent_transform.scale_y;
     
     // debug draw transform from parent
     /*SDL_Color orange = {255, 168, 0, 255};
