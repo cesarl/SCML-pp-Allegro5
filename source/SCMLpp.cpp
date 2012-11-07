@@ -2496,11 +2496,7 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
         }
         else
         {
-            // Assuming that each object corresponds to objects of the same id...
-            Animation::Mainline::Key::Object_Ref* ref1 = e->second.object_ref;
-            Animation::Mainline::Key::Object_Ref* ref2 = getObjectRef(animation, nextKeyID, e->first);
-            
-            draw_tweened_object(x, y, angle, scale_x, scale_y, ref1, ref2);
+            draw_tweened_object(x, y, angle, scale_x, scale_y, e->second.object_ref);
         }
     }
 }
@@ -2544,15 +2540,13 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
 }
 
 
-void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2)
+void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1)
 {
     // Dereference object_refs
-    if(ref2 == NULL)
-        ref2 = ref1;
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref1->timeline, ref1->key+1);
     Animation::Timeline::Key::Object* obj1 = getTimelineObject(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key::Object* obj2 = getTimelineObject(animation, ref2->timeline, ref2->key);
+    Animation::Timeline::Key::Object* obj2 = getTimelineObject(animation, ref1->timeline, ref1->key+1);
     if(t_key2 == NULL)
         t_key2 = t_key1;
     if(obj2 == NULL)
@@ -2708,15 +2702,11 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
     {
         if(e->second.hasBone_Ref())
         {
-            // Assuming that each bone corresponds to bones of the same id...
             Animation::Mainline::Key::Bone_Ref* ref1 = e->second.bone_ref;
-            Animation::Mainline::Key::Bone_Ref* ref2 = entity_ptr->getBoneRef(animation, nextKey, e->first);
             
             // Dereference object_refs
-            if(ref2 == NULL)
-                ref2 = ref1;
             Animation::Timeline::Key* t_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
-            Animation::Timeline::Key* t_key2 = entity_ptr->getTimelineKey(animation, ref2->timeline, ref2->key);
+            Animation::Timeline::Key* t_key2 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key+1);
             if(t_key2 == NULL)
                 t_key2 = t_key1;
             if(t_key1 != NULL && t_key2 != NULL)
@@ -2726,7 +2716,9 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
                     t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
                 
                 Entity::Animation::Timeline::Key* b_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
-                Entity::Animation::Timeline::Key* b_key2 = entity_ptr->getTimelineKey(animation, ref2->timeline, ref2->key);
+                Entity::Animation::Timeline::Key* b_key2 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key+1);
+                if(b_key2 == NULL)
+                    b_key2 = b_key1;
                 Entity::Animation::Timeline::Key::Bone* bone1 = &b_key1->bone;
                 Entity::Animation::Timeline::Key::Bone* bone2 = &b_key2->bone;
                 

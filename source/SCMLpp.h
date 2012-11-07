@@ -1158,7 +1158,7 @@ public:
     virtual void draw(float x, float y, float angle = 0.0f, float scale_x = 1.0f, float scale_y = 1.0f);
 
     virtual void draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj);
-    virtual void draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2);
+    virtual void draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1);
 
     /*! \brief Draws an image using a specific renderer.
      *
