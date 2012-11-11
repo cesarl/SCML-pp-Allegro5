@@ -2,7 +2,7 @@
 #define _SFML_RENDERER_H__
 
 #include "SFML/Graphics/Texture.hpp"
-#include "../SCMLpp.h"
+#include "SCMLpp.h"
 #include <map>
 
 /*! \brief Namespace for SFML renderer

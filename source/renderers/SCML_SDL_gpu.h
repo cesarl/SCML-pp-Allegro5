@@ -2,7 +2,7 @@
 #define _SDL_GPU_RENDERER_H__
 
 #include "SDL_gpu.h"
-#include "../SCMLpp.h"
+#include "SCMLpp.h"
 #include <map>
 
 /*! \brief Namespace for SDL_gpu renderer (the example renderer)

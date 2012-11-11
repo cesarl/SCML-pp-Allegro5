@@ -2,7 +2,7 @@
 #define _COCOS2DX_RENDERER_H__
 
 #include "cocos2d.h"
-#include "../SCMLpp.h"
+#include "SCMLpp.h"
 #include <map>
 
 /*! \brief Namespace for Cocos2d-x renderer

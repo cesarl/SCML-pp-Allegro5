@@ -2,7 +2,7 @@
 #define _SPRIG_RENDERER_H__
 
 #include "sprig.h"
-#include "../SCMLpp.h"
+#include "SCMLpp.h"
 #include <map>
 
 /*! \brief Namespace for SPriG renderer
