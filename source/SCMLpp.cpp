@@ -1226,6 +1226,11 @@ bool Data::Entity::Animation::Mainline::Key::Bone::load(TiXmlElement* elem)
     b = xmlGetFloatAttr(elem, "b", 1.0f);
     a = xmlGetFloatAttr(elem, "a", 1.0f);
     
+    while(angle < 0.0f)
+        angle += 360.0f;
+    while(angle >= 360.0f)
+        angle -= 360.0f;
+    
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
     if(meta_data_child != NULL)
     {
@@ -1392,6 +1397,12 @@ bool Data::Entity::Animation::Mainline::Key::Object::load(TiXmlElement* elem)
         volume = xmlGetFloatAttr(elem, "volume", 1.0f);
         panning = xmlGetFloatAttr(elem, "panning", 0.0f);
     }
+    
+    
+    while(angle < 0.0f)
+        angle += 360.0f;
+    while(angle >= 360.0f)
+        angle -= 360.0f;
     
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
     if(meta_data_child != NULL)
@@ -1921,6 +1932,11 @@ bool Data::Entity::Animation::Timeline::Key::Bone::load(TiXmlElement* elem)
     b = xmlGetFloatAttr(elem, "b", 1.0f);
     a = xmlGetFloatAttr(elem, "a", 1.0f);
     
+    while(angle < 0.0f)
+        angle += 360.0f;
+    while(angle >= 360.0f)
+        angle -= 360.0f;
+    
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
     if(meta_data_child != NULL)
     {
@@ -2034,6 +2050,11 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
         volume = xmlGetFloatAttr(elem, "volume", 1.0f);
         panning = xmlGetFloatAttr(elem, "panning", 0.0f);
     }
+    
+    while(angle < 0.0f)
+        angle += 360.0f;
+    while(angle >= 360.0f)
+        angle -= 360.0f;
     
     
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
