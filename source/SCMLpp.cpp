@@ -2492,17 +2492,17 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
     {
         if(e->second.hasObject())
         {
-            draw_simple_object(x, y, angle, scale_x, scale_y, e->second.object);
+            draw_simple_object(e->second.object);
         }
         else
         {
-            draw_tweened_object(x, y, angle, scale_x, scale_y, e->second.object_ref);
+            draw_tweened_object(e->second.object_ref);
         }
     }
 }
 
 
-void Entity::draw_simple_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object* obj1)
+void Entity::draw_simple_object(Animation::Mainline::Key::Object* obj1)
 {
     // Get parent bone transform
     Transform parent_transform;
@@ -2531,8 +2531,8 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
     // Rotate about the pivot point and draw from the center of the image
     float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
     float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
-    float sprite_x = -offset_x*scale_x;
-    float sprite_y = -offset_y*scale_y;
+    float sprite_x = -offset_x*obj_transform.scale_x;
+    float sprite_y = -offset_y*obj_transform.scale_y;
     rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
     
     // Let the renderer draw it
@@ -2540,7 +2540,7 @@ void Entity::draw_simple_object(float x, float y, float angle, float scale_x, fl
 }
 
 
-void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, float scale_y, Animation::Mainline::Key::Object_Ref* ref1)
+void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
 {
     // Dereference object_ref and get the next one in the timeline for tweening
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
@@ -2589,8 +2589,8 @@ void Entity::draw_tweened_object(float x, float y, float angle, float scale_x, f
         // Rotate about the pivot point and draw from the center of the image
         float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
         float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
-        float sprite_x = -offset_x*scale_x;
-        float sprite_y = -offset_y*scale_y;
+        float sprite_x = -offset_x*obj_transform.scale_x;
+        float sprite_y = -offset_y*obj_transform.scale_y;
         rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
         
         // Let the renderer draw it
@@ -2625,12 +2625,15 @@ void Entity::Transform::lerp(const Transform& transform, float t, int spin)
     y = SCML::lerp(y, transform.y, t);
     
     // 'spin' is based on what you are coming from (key1)
-    if(spin > 0 && angle > transform.angle)
-        angle = SCML::lerp(angle, transform.angle + 360, t);
-    else if(spin < 0 && angle < transform.angle)
-        angle = SCML::lerp(angle, transform.angle - 360, t);
-    else
-        angle = SCML::lerp(angle, transform.angle, t);
+    if(spin != 0)
+    {
+        if(spin > 0 && angle > transform.angle)
+            angle = SCML::lerp(angle, transform.angle + 360, t);
+        else if(spin < 0 && angle < transform.angle)
+            angle = SCML::lerp(angle, transform.angle - 360, t);
+        else
+            angle = SCML::lerp(angle, transform.angle, t);
+    }
         
     scale_x = SCML::lerp(scale_x, transform.scale_x, t);
     scale_y = SCML::lerp(scale_y, transform.scale_y, t);
