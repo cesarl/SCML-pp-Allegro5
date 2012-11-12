@@ -12,6 +12,28 @@ SDL_gpu
 SPriG
 SFML 2.0
 
+
+HELP!
+-----
+
+SCMLpp could really use your help!  Together we can answer the following questions.  If you have any answers you'd like to share, please contact me.  I'm also looking for direct help in implementing features, interfaces, and renderers.
+
+What should the interface do?
+What are some good use-cases?
+Who is interested in the library?
+What other renderers should be included?
+How can the library help you make great games?
+
+
+Documentation
+-------------
+
+SCMLpp uses Doxygen to generate documentation from commented source code.  Run the Doxygen system on the file source/Doxyfile.  When SCMLpp is more mature, pre-generated documentation will be available elsewhere, too.
+
+
+File Layout
+-----------
+
 SCMLpp itself is contained in two files:
 source/SCMLpp.h
 source/SCMLpp.cpp
@@ -45,12 +67,6 @@ source/libraries/tinyxmlparser.cpp
 source/libraries/tinyxmlerror.cpp
 source/libraries/XML_Helpers.h
 source/libraries/XML_Helpers.cpp
-
-
-Documentation
--------------
-
-SCMLpp uses Doxygen to generate documentation from commented source code.  Run the Doxygen system on source/Doxyfile.  When SCMLpp is more mature, pre-generated documentation will be available elsewhere, too.
 
 
 Basic usage
