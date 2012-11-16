@@ -2455,8 +2455,11 @@ inline float lerp(float a, float b, float t)
 }
 
 // This is for rotating untranslated points and offsetting them to a new origin.
-static void rotate_point(float& x, float& y, float angle, float origin_x, float origin_y)
+static void rotate_point(float& x, float& y, float angle, float origin_x, float origin_y, bool flipped)
 {
+    if(flipped)
+        angle = -angle;
+    
     float s = sin(angle*M_PI/180);
     float c = cos(angle*M_PI/180);
     float xnew = (x * c) - (y * s);
@@ -2533,10 +2536,12 @@ void Entity::draw_simple_object(Animation::Mainline::Key::Object* obj1)
     float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
     float sprite_x = -offset_x*obj_transform.scale_x;
     float sprite_y = -offset_y*obj_transform.scale_y;
-    rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
+    
+    bool flipped = ((obj_transform.scale_x < 0) != (obj_transform.scale_y < 0));
+    rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y, flipped);
     
     // Let the renderer draw it
-    draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
+    draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, flipped? -obj_transform.angle : obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
 }
 
 
@@ -2591,10 +2596,12 @@ void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
         float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
         float sprite_x = -offset_x*obj_transform.scale_x;
         float sprite_y = -offset_y*obj_transform.scale_y;
-        rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y);
+        
+        bool flipped = ((obj_transform.scale_x < 0) != (obj_transform.scale_y < 0));
+        rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y, flipped);
         
         // Let the renderer draw it
-        draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
+        draw_internal(obj1->folder, obj1->file, sprite_x, sprite_y, flipped? -obj_transform.angle : obj_transform.angle, obj_transform.scale_x, obj_transform.scale_y);
     }
 }
 
@@ -2643,7 +2650,9 @@ void Entity::Transform::apply_parent_transform(const Transform& parent)
 {
     x *= parent.scale_x;
     y *= parent.scale_y;
-    rotate_point(x, y, parent.angle, parent.x, parent.y);
+    
+    bool flipped = ((parent.scale_x < 0) != (parent.scale_y < 0));
+    rotate_point(x, y, parent.angle, parent.x, parent.y, flipped);
     
     angle += parent.angle;
     scale_x *= parent.scale_x;

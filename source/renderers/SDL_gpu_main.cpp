@@ -33,6 +33,7 @@ void main_loop(vector<string>& data_files)
     float y = 300.0f;
     float angle = 0.0f;
     float scale = 1.0f;
+    bool flipped = false;
     
     bool paused = false;
     
@@ -91,6 +92,10 @@ void main_loop(vector<string>& data_files)
                 else if(event.key.keysym.sym == SDLK_p)
                 {
                     paused = !paused;
+                }
+                else if(event.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    flipped = !flipped;
                 }
                 else if(event.key.keysym.sym == SDLK_RETURN)
                 {
@@ -158,7 +163,7 @@ void main_loop(vector<string>& data_files)
         
         for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
         {
-            (*e)->draw(x, y, angle, scale, scale);
+            (*e)->draw(x, y, angle, (flipped? -scale : scale), scale);
         }
         
         
