@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <cmath>
 
-using namespace std;
 
 namespace SCML_SFML
 {
@@ -21,9 +20,9 @@ bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& file
     if(img == NULL)
         return false;
     
-    if(!images.insert(make_pair(make_pair(folderID, fileID), img)).second)
+    if(!SCML_MAP_INSERT(images, SCML_MAKE_PAIR(folderID, fileID), img))
     {
-        printf("SCML_SFML::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", filename.c_str(), folderID, fileID);
+        printf("SCML_SFML::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", SCML_TO_CSTRING(filename), folderID, fileID);
         delete img;
         return false;
     }
@@ -32,27 +31,26 @@ bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& file
 
 void FileSystem::clear()
 {
-    for(map<pair<int,int>, sf::Texture*>::iterator e = images.begin(); e != images.end(); e++)
+    typedef SCML_PAIR(int,int) pair_type;
+    SCML_BEGIN_MAP_FOREACH_CONST(images, pair_type, sf::Texture*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     images.clear();
 }
 
-std::pair<unsigned int, unsigned int> FileSystem::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) FileSystem::getImageDimensions(int folderID, int fileID) const
 {
-    map<pair<int,int>, sf::Texture*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return make_pair(0,0);
-    return make_pair(e->second->getSize().x, e->second->getSize().y);
+    sf::Texture* img = SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
+    if(img == NULL)
+        return SCML_MAKE_PAIR(0,0);
+    return SCML_MAKE_PAIR(img->getSize().x, img->getSize().y);
 }
 
 sf::Texture* FileSystem::getImage(int folderID, int fileID) const
 {
-    map<pair<int,int>, sf::Texture*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return NULL;
-    return e->second;
+    return SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
 }
 
 
@@ -94,7 +92,7 @@ void Entity::convert_to_SCML_coords(float& x, float& y, float& angle)
     angle = 360 - angle;
 }
 
-std::pair<unsigned int, unsigned int> Entity::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) Entity::getImageDimensions(int folderID, int fileID) const
 {
     return file_system->getImageDimensions(folderID, fileID);
 }

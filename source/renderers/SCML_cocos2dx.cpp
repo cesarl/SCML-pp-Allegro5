@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cmath>
 
-using namespace std;
 using namespace cocos2d;
 
 namespace SCML_cocos2dx
@@ -16,14 +15,14 @@ FileSystem::~FileSystem()
 
 bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& filename)
 {
-	CCSprite* img = CCSprite::create(filename.c_str());
+	CCSprite* img = CCSprite::create(SCML_TO_CSTRING(filename));
 	
     if(img == NULL)
         return false;
     
-    if(!images.insert(make_pair(make_pair(folderID, fileID), img)).second)
+    if(!SCML_MAP_INSERT(images, SCML_MAKE_PAIR(folderID, fileID), img))
     {
-        printf("SCML_cocos2dx::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", filename.c_str(), folderID, fileID);
+        printf("SCML_cocos2dx::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", SCML_TO_CSTRING(filename), folderID, fileID);
         return false;
     }
     else
@@ -33,27 +32,26 @@ bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& file
 
 void FileSystem::clear()
 {
-    for(map<pair<int,int>, CCSprite*>::iterator e = images.begin(); e != images.end(); e++)
+    typedef SCML_PAIR(int,int) pair_type;
+    SCML_BEGIN_MAP_FOREACH_CONST(images, pair_type, CCSprite*, item)
     {
-        e->second->release();
+        item->release();
     }
+    SCML_END_MAP_FOREACH_CONST;
     images.clear();
 }
 
-std::pair<unsigned int, unsigned int> FileSystem::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) FileSystem::getImageDimensions(int folderID, int fileID) const
 {
-    map<pair<int,int>, CCSprite*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return make_pair(0,0);
-    return make_pair(e->second->boundingBox().size.width, e->second->boundingBox().size.height);
+    CCSprite* img = SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
+    if(img == NULL)
+        return SCML_MAKE_PAIR(0,0);
+    return SCML_MAKE_PAIR(img->boundingBox().size.width, img->boundingBox().size.height);
 }
 
 CCSprite* FileSystem::getImage(int folderID, int fileID) const
 {
-    map<pair<int,int>, CCSprite*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return NULL;
-    return e->second;
+    return SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
 }
 
 
@@ -88,7 +86,7 @@ void Entity::convert_to_SCML_coords(float& x, float& y, float& angle)
     angle = 360 - angle;
 }
 
-std::pair<unsigned int, unsigned int> Entity::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) Entity::getImageDimensions(int folderID, int fileID) const
 {
     return file_system->getImageDimensions(folderID, fileID);
 }

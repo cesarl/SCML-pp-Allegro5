@@ -1,10 +1,60 @@
 #ifndef _SCMLPP_H__
 #define _SCMLPP_H__
 
-#include <string>
-#include <map>
-#include <list>
-#include <vector>
+
+// Compile-time switches for container classes
+// Do you want the STL to be used?
+#ifndef SCML_NO_STL
+    #include <string>
+    #include <map>
+    #include <vector>
+
+    #define SCML_STRING std::string
+    #define SCML_MAP(a,b) std::map< a, b >
+    #define SCML_VECTOR(a) std::vector< a >
+    #define SCML_PAIR(a,b) std::pair< a, b >
+    
+    #define SCML_VECTOR_SIZE(v) (v).size()
+    #define SCML_VECTOR_RESIZE(v,size) (v).resize(size)
+    #define SCML_VECTOR_CLEAR(v) (v).clear()
+    
+    #define SCML_PAIR_FIRST(p) (p).first
+    #define SCML_PAIR_SECOND(p) (p).second
+    
+    template<typename A, typename B>
+    inline SCML_PAIR(A, B) SCML_MAKE_PAIR(A const& a, B const& b)
+    {
+        return std::make_pair(a, b);
+    }
+    
+    #define SCML_MAP_SIZE(m) (m).size()
+    #define SCML_MAP_INSERT(m,a,b) m.insert(std::make_pair((a),(b))).second
+    
+    // Be careful with these...  Macros don't nest well.  Use a typedef as necessary for the map parameters.
+    #define SCML_BEGIN_MAP_FOREACH(m,a,b,name) for(SCML_MAP(a , b)::iterator _iter_e = m.begin(); _iter_e != m.end(); _iter_e++) { b& name = _iter_e->second;
+    #define SCML_END_MAP_FOREACH }
+    #define SCML_BEGIN_MAP_FOREACH_CONST(m,a,b,name) for(SCML_MAP(a , b)::const_iterator _iter_e = m.begin(); _iter_e != m.end(); _iter_e++) { b const& name = _iter_e->second;
+    #define SCML_END_MAP_FOREACH_CONST }
+    
+    #define SCML_TO_CSTRING(s) (s).c_str()
+    #define SCML_STRING_SIZE(s) (s).size()
+    #define SCML_SET_STRING(s,value) s = value
+    #define SCML_STRING_APPEND(s,value) s += value
+    
+    template<typename A, typename B>
+    inline B SCML_MAP_FIND(SCML_MAP(A, B) const& m, A const& key)
+    {
+        typename SCML_MAP(A,B)::const_iterator e = m.find(key);
+        if(e == m.end())
+            return B();
+        return e->second;
+    }
+#else
+
+    // TODO: Provide an alternative to the STL for string, map, and vector.
+
+#endif
+
 #include "tinyxml.h"
 
 /*! \brief Namespace for SCMLpp
@@ -20,29 +70,29 @@ class Data
 {
 public:
 
-    std::string name;
-    std::string scml_version;
-    std::string generator;
-    std::string generator_version;
+    SCML_STRING name;
+    SCML_STRING scml_version;
+    SCML_STRING generator;
+    SCML_STRING generator_version;
     bool pixel_art_mode;
 
     class Folder;
-    std::map<int, Folder*> folders;
+    SCML_MAP(int, Folder*) folders;
     class Atlas;
-    std::map<int, Atlas*> atlases;
+    SCML_MAP(int, Atlas*) atlases;
     class Entity;
-    std::map<int, Entity*> entities;
+    SCML_MAP(int, Entity*) entities;
     class Character_Map;
-    std::map<int, Character_Map*> character_maps;
+    SCML_MAP(int, Character_Map*) character_maps;
 
     Data();
-    Data(const std::string& file);
+    Data(const SCML_STRING& file);
     Data(TiXmlElement* elem);
     Data(const Data& copy);
     Data& operator=(const Data& copy);
     ~Data();
 
-    bool load(const std::string& file);
+    bool load(const SCML_STRING& file);
     bool load(TiXmlElement* elem);
     Data& clone(const Data& copy, bool skip_base = false);
     void log(int recursive_depth = 0) const;
@@ -55,9 +105,9 @@ public:
     public:
 
         class Variable;
-        std::map<std::string, Variable*> variables;
+        SCML_MAP(SCML_STRING, Variable*) variables;
         class Tag;
-        std::map<std::string, Tag*> tags;
+        SCML_MAP(SCML_STRING, Tag*) tags;
 
         Meta_Data();
         Meta_Data(TiXmlElement* elem);
@@ -70,10 +120,10 @@ public:
         {
         public:
 
-            std::string name;
-            std::string type;
+            SCML_STRING name;
+            SCML_STRING type;
 
-            std::string value_string;
+            SCML_STRING value_string;
             int value_int;
             float value_float;
 
@@ -89,7 +139,7 @@ public:
         {
         public:
 
-            std::string name;
+            SCML_STRING name;
 
             Tag();
             Tag(TiXmlElement* elem);
@@ -106,9 +156,9 @@ public:
     public:
 
         class Variable;
-        std::map<std::string, Variable*> variables;
+        SCML_MAP(SCML_STRING, Variable*) variables;
         class Tag;
-        std::map<std::string, Tag*> tags;
+        SCML_MAP(SCML_STRING, Tag*) tags;
 
         Meta_Data_Tweenable();
         Meta_Data_Tweenable(TiXmlElement* elem);
@@ -121,12 +171,12 @@ public:
         {
         public:
 
-            std::string name;
-            std::string type;
-            std::string value_string;
+            SCML_STRING name;
+            SCML_STRING type;
+            SCML_STRING value_string;
             int value_int;
             float value_float;
-            std::string curve_type;
+            SCML_STRING curve_type;
             float c1;
             float c2;
 
@@ -143,7 +193,7 @@ public:
         {
         public:
 
-            std::string name;
+            SCML_STRING name;
 
             Tag();
             Tag(TiXmlElement* elem);
@@ -161,10 +211,10 @@ public:
     public:
 
         int id;
-        std::string name;
+        SCML_STRING name;
 
         class File;
-        std::map<int, File*> files;
+        SCML_MAP(int, File*) files;
 
         Folder();
         Folder(TiXmlElement* elem);
@@ -177,9 +227,9 @@ public:
         {
         public:
 
-            std::string type;
+            SCML_STRING type;
             int id;
-            std::string name;
+            SCML_STRING name;
             float pivot_x;
             float pivot_y;
             int width;
@@ -205,11 +255,11 @@ public:
     {
     public:
         int id;
-        std::string data_path;
-        std::string image_path;
+        SCML_STRING data_path;
+        SCML_STRING image_path;
 
         class Folder;
-        std::map<int, Folder*> folders;
+        SCML_MAP(int, Folder*) folders;
 
         Atlas();
         Atlas(TiXmlElement* elem);
@@ -223,10 +273,10 @@ public:
         public:
 
             int id;
-            std::string name;
+            SCML_STRING name;
 
             class Image;
-            std::map<int, Image*> images;
+            SCML_MAP(int, Image*) images;
 
             Folder();
             Folder(TiXmlElement* elem);
@@ -241,7 +291,7 @@ public:
             public:
 
                 int id;
-                std::string full_path;
+                SCML_STRING full_path;
 
                 Image();
                 Image(TiXmlElement* elem);
@@ -259,10 +309,10 @@ public:
     public:
 
         int id;
-        std::string name;
+        SCML_STRING name;
 
         class Animation;
-        std::map<int, Animation*> animations;
+        SCML_MAP(int, Animation*) animations;
 
         Entity();
         Entity(TiXmlElement* elem);
@@ -278,9 +328,9 @@ public:
         public:
 
             int id;
-            std::string name;
+            SCML_STRING name;
             int length;
-            std::string looping;
+            SCML_STRING looping;
             int loop_to;
 
             Meta_Data* meta_data;
@@ -298,7 +348,7 @@ public:
                 void clear();
 
                 class Key;
-                std::map<int, Key*> keys;
+                SCML_MAP(int, Key*) keys;
 
                 class Key
                 {
@@ -325,6 +375,9 @@ public:
                         Object* object;
                         Object_Ref* object_ref;
 
+                        Object_Container()
+                            : object(NULL), object_ref(NULL)
+                        {}
                         Object_Container(Object* object)
                             : object(object), object_ref(NULL)
                         {}
@@ -342,7 +395,7 @@ public:
                         }
                     };
 
-                    std::map<int, Object_Container> objects;
+                    SCML_MAP(int, Object_Container) objects;
 
 
                     class Bone;
@@ -354,6 +407,9 @@ public:
                         Bone* bone;
                         Bone_Ref* bone_ref;
 
+                        Bone_Container()
+                            : bone(NULL), bone_ref(NULL)
+                        {}
                         Bone_Container(Bone* bone)
                             : bone(bone), bone_ref(NULL)
                         {}
@@ -371,7 +427,7 @@ public:
                         }
                     };
 
-                    std::map<int, Bone_Container> bones;
+                    SCML_MAP(int, Bone_Container) bones;
 
                     class Bone
                     {
@@ -423,13 +479,13 @@ public:
 
                         int id;
                         int parent; // a bone id
-                        std::string object_type;
+                        SCML_STRING object_type;
                         int atlas;
                         int folder;
                         int file;
-                        std::string usage;
-                        std::string blend_mode;
-                        std::string name;
+                        SCML_STRING usage;
+                        SCML_STRING blend_mode;
+                        SCML_STRING name;
                         float x;
                         float y;
                         float pivot_x;
@@ -447,8 +503,8 @@ public:
                         float g;
                         float b;
                         float a;
-                        std::string variable_type;
-                        std::string value_string;
+                        SCML_STRING variable_type;
+                        SCML_STRING value_string;
                         int value_int;
                         int min_int;
                         int max_int;
@@ -496,7 +552,7 @@ public:
             Mainline mainline;
 
             class Timeline;
-            std::map<int, Timeline*> timelines;
+            SCML_MAP(int, Timeline*) timelines;
 
             Animation();
             Animation(TiXmlElement* elem);
@@ -512,10 +568,10 @@ public:
             public:
 
                 int id;
-                std::string name;
-                std::string object_type;
-                std::string variable_type;
-                std::string usage;
+                SCML_STRING name;
+                SCML_STRING object_type;
+                SCML_STRING variable_type;
+                SCML_STRING usage;
                 Meta_Data* meta_data;
 
                 Timeline();
@@ -526,7 +582,7 @@ public:
                 void clear();
 
                 class Key;
-                std::map<int, Key*> keys;
+                SCML_MAP(int, Key*) keys;
 
                 class Key
                 {
@@ -534,7 +590,7 @@ public:
 
                     int id;
                     int time;
-                    std::string curve_type;
+                    SCML_STRING curve_type;
                     float c1;
                     float c2;
                     int spin;
@@ -580,12 +636,12 @@ public:
                     {
                     public:
 
-                        //std::string object_type; // Does this exist?
+                        //SCML_STRING object_type; // Does this exist?
                         int atlas;
                         int folder;
                         int file;
-                        //std::string usage;  // Does this exist?
-                        std::string name;
+                        //SCML_STRING usage;  // Does this exist?
+                        SCML_STRING name;
                         float x;
                         float y;
                         float pivot_x;
@@ -600,9 +656,9 @@ public:
                         float g;
                         float b;
                         float a;
-                        std::string blend_mode;
-                        //std::string variable_type; // Does this exist?
-                        std::string value_string;
+                        SCML_STRING blend_mode;
+                        //SCML_STRING variable_type; // Does this exist?
+                        SCML_STRING value_string;
                         int value_int;
                         int min_int;
                         int max_int;
@@ -636,7 +692,7 @@ public:
     public:
 
         int id;
-        std::string name;
+        SCML_STRING name;
 
         Character_Map();
         Character_Map(TiXmlElement* elem);
@@ -671,12 +727,12 @@ public:
     {
     public:
 
-        std::string author;
-        std::string copyright;
-        std::string license;
-        std::string version;
-        std::string last_modified;
-        std::string notes;
+        SCML_STRING author;
+        SCML_STRING copyright;
+        SCML_STRING license;
+        SCML_STRING version;
+        SCML_STRING last_modified;
+        SCML_STRING notes;
 
         Document_Info();
         Document_Info(TiXmlElement* elem);
@@ -711,7 +767,7 @@ public:
      * \param filename Path of the image file
      * \return true on success, false on failure
      */
-    virtual bool loadImageFile(int folderID, int fileID, const std::string& filename) = 0;
+    virtual bool loadImageFile(int folderID, int fileID, const SCML_STRING& filename) = 0;
 
     /*! \brief Cleans up all memory used by the FileSystem to store images, resetting it to an empty state.
      */
@@ -722,7 +778,7 @@ public:
      * \param fileID Integer file ID
      * \return A pair consisting of the width and height of the image.  Returns (0,0) on error.
      */
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const = 0;
 };
 
 
@@ -772,7 +828,7 @@ public:
         int time;
         
         Transform base_transform;
-        std::vector<Transform> transforms;
+        SCML_VECTOR(Transform) transforms;
         
         Bone_Transform_State();
         
@@ -782,10 +838,10 @@ public:
     
     Bone_Transform_State bone_transform_state;
 
-    std::string name;
+    SCML_STRING name;
 
     class Animation;
-    std::map<int, Animation*> animations;
+    SCML_MAP(int, Animation*) animations;
 
     //Meta_Data* meta_data;
 
@@ -796,9 +852,9 @@ public:
     public:
 
         int id;
-        std::string name;
+        SCML_STRING name;
         int length;
-        std::string looping;
+        SCML_STRING looping;
         int loop_to;
 
         //Meta_Data* meta_data;
@@ -812,7 +868,7 @@ public:
             void clear();
 
             class Key;
-            std::map<int, Key*> keys;
+            SCML_MAP(int, Key*) keys;
 
             class Key
             {
@@ -835,6 +891,9 @@ public:
                     Object* object;
                     Object_Ref* object_ref;
 
+                    Object_Container()
+                        : object(NULL), object_ref(NULL)
+                    {}
                     Object_Container(Object* object)
                         : object(object), object_ref(NULL)
                     {}
@@ -852,7 +911,7 @@ public:
                     }
                 };
 
-                std::map<int, Object_Container> objects;
+                SCML_MAP(int, Object_Container) objects;
 
 
                 class Bone;
@@ -864,6 +923,9 @@ public:
                     Bone* bone;
                     Bone_Ref* bone_ref;
 
+                    Bone_Container()
+                        : bone(NULL), bone_ref(NULL)
+                    {}
                     Bone_Container(Bone* bone)
                         : bone(bone), bone_ref(NULL)
                     {}
@@ -881,7 +943,7 @@ public:
                     }
                 };
 
-                std::map<int, Bone_Container> bones;
+                SCML_MAP(int, Bone_Container) bones;
 
 
                 class Bone
@@ -927,13 +989,13 @@ public:
 
                     int id;
                     int parent; // a bone id
-                    std::string object_type;
+                    SCML_STRING object_type;
                     int atlas;
                     int folder;
                     int file;
-                    std::string usage;
-                    std::string blend_mode;
-                    std::string name;
+                    SCML_STRING usage;
+                    SCML_STRING blend_mode;
+                    SCML_STRING name;
                     float x;
                     float y;
                     float pivot_x;
@@ -951,8 +1013,8 @@ public:
                     float g;
                     float b;
                     float a;
-                    std::string variable_type;
-                    std::string value_string;
+                    SCML_STRING variable_type;
+                    SCML_STRING value_string;
                     int value_int;
                     int min_int;
                     int max_int;
@@ -994,7 +1056,7 @@ public:
         Mainline mainline;
 
         class Timeline;
-        std::map<int, Timeline*> timelines;
+        SCML_MAP(int, Timeline*) timelines;
 
         Animation(SCML::Data::Entity::Animation* animation);
 
@@ -1007,10 +1069,10 @@ public:
         public:
 
             int id;
-            std::string name;
-            std::string object_type;
-            std::string variable_type;
-            std::string usage;
+            SCML_STRING name;
+            SCML_STRING object_type;
+            SCML_STRING variable_type;
+            SCML_STRING usage;
             //Meta_Data* meta_data;
 
             Timeline(SCML::Data::Entity::Animation::Timeline* timeline);
@@ -1018,7 +1080,7 @@ public:
             void clear();
 
             class Key;
-            std::map<int, Key*> keys;
+            SCML_MAP(int, Key*) keys;
 
             class Key
             {
@@ -1026,7 +1088,7 @@ public:
 
                 int id;
                 int time;
-                std::string curve_type;
+                SCML_STRING curve_type;
                 float c1;
                 float c2;
                 int spin;
@@ -1066,12 +1128,12 @@ public:
                 {
                 public:
 
-                    //std::string object_type; // Does this exist?
+                    //SCML_STRING object_type; // Does this exist?
                     int atlas;
                     int folder;
                     int file;
-                    //std::string usage;  // Does this exist?
-                    std::string name;
+                    //SCML_STRING usage;  // Does this exist?
+                    SCML_STRING name;
                     float x;
                     float y;
                     float pivot_x;
@@ -1086,9 +1148,9 @@ public:
                     float g;
                     float b;
                     float a;
-                    std::string blend_mode;
-                    //std::string variable_type; // Does this exist?
-                    std::string value_string;
+                    SCML_STRING blend_mode;
+                    //SCML_STRING variable_type; // Does this exist?
+                    SCML_STRING value_string;
                     int value_int;
                     int min_int;
                     int max_int;
@@ -1139,7 +1201,7 @@ public:
      * \param fileID Integer file ID of the image
      * \return A pair consisting of the width and height of the image.  Returns (0,0) on error.
      */
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const = 0;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const = 0;
 
     /*! \brief Updates the state of the entity, incrementing its timer and changing the keyframe.
      *

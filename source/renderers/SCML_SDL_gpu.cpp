@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cmath>
 
-using namespace std;
 
 namespace SCML_SDL_gpu
 {
@@ -17,12 +16,12 @@ FileSystem::~FileSystem()
 bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& filename)
 {
     // Load an image and store it somewhere accessible by its folder/file ID combo.
-    GPU_Image* img = GPU_LoadImage(filename.c_str());
+    GPU_Image* img = GPU_LoadImage(SCML_TO_CSTRING(filename));
     if(img == NULL)
         return false;
-    if(!images.insert(make_pair(make_pair(folderID, fileID), img)).second)
+    if(!SCML_MAP_INSERT(images, SCML_MAKE_PAIR(folderID, fileID), img))
     {
-        printf("SCML_SDL_gpu::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", filename.c_str(), folderID, fileID);
+        printf("SCML_SDL_gpu::FileSystem failed to load image: Loading %s duplicates a folder/file id (%d/%d)\n", SCML_TO_CSTRING(filename), folderID, fileID);
         GPU_FreeImage(img);
         return false;
     }
@@ -32,29 +31,28 @@ bool FileSystem::loadImageFile(int folderID, int fileID, const std::string& file
 void FileSystem::clear()
 {
     // Delete the stored images
-    for(map<pair<int,int>, GPU_Image*>::iterator e = images.begin(); e != images.end(); e++)
+    typedef SCML_PAIR(int,int) pair_type;
+    SCML_BEGIN_MAP_FOREACH_CONST(images, pair_type, GPU_Image*, item)
     {
-        GPU_FreeImage(e->second);
+        GPU_FreeImage(item);
     }
+    SCML_END_MAP_FOREACH_CONST;
     images.clear();
 }
 
-std::pair<unsigned int, unsigned int> FileSystem::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) FileSystem::getImageDimensions(int folderID, int fileID) const
 {
-    // Return the width and height of an image (as a std::pair of unsigned ints)
-    map<pair<int,int>, GPU_Image*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return make_pair(0,0);
-    return make_pair(e->second->w, e->second->h);
+    // Return the width and height of an image (as a pair of unsigned ints)
+    GPU_Image* img = SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
+    if(img == NULL)
+        return SCML_MAKE_PAIR(0,0);
+    return SCML_MAKE_PAIR(img->w, img->h);
 }
 
 GPU_Image* FileSystem::getImage(int folderID, int fileID) const
 {
     // Return an image
-    map<pair<int,int>, GPU_Image*>::const_iterator e = images.find(make_pair(folderID, fileID));
-    if(e == images.end())
-        return NULL;
-    return e->second;
+    return SCML_MAP_FIND(images, SCML_MAKE_PAIR(folderID, fileID));
 }
 
 
@@ -98,7 +96,7 @@ void Entity::convert_to_SCML_coords(float& x, float& y, float& angle)
     angle = 360 - angle;
 }
 
-std::pair<unsigned int, unsigned int> Entity::getImageDimensions(int folderID, int fileID) const
+SCML_PAIR(unsigned int, unsigned int) Entity::getImageDimensions(int folderID, int fileID) const
 {
     // Let the FileSystem do the work
     return file_system->getImageDimensions(folderID, fileID);

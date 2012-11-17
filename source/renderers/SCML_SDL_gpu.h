@@ -3,7 +3,6 @@
 
 #include "SDL_gpu.h"
 #include "SCMLpp.h"
-#include <map>
 
 /*! \brief Namespace for SDL_gpu renderer (the example renderer)
 */
@@ -20,7 +19,7 @@ class FileSystem : public SCML::FileSystem
     
     /*! These ints are: Folder, File.  SCMLpp uses these two integers to uniquely identify to an image.
     */
-    std::map<std::pair<int, int>, GPU_Image*> images;
+    SCML_MAP(SCML_PAIR(int, int), GPU_Image*) images;
     
     /*! Delete all of the stored images in the destructor
     */
@@ -36,7 +35,7 @@ class FileSystem : public SCML::FileSystem
     
     /*! Get the width and height of an image
     */
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     
     /*! Get an image
     */
@@ -71,7 +70,7 @@ class Entity : public SCML::Entity
     
     /*! Get the width and height of an image.  I don't really like this (since FileSystem already does it), but it is currently necessary.
     */
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     
     /*! The actual drawing call
      * (x, y) specifies the center point of the image.  x, y, and angle are in SCML coordinate system (+x to the right, +y up, +angle counter-clockwise), so they must be converted,

@@ -2,26 +2,26 @@
 #define _XML_HELPERS_H__
 
 
+#include "SCMLpp.h"
 #include "tinyxml.h"
-#include <string>
 
-bool toBool(const std::string& str);
-int toInt(const std::string& str);
-float toFloat(const std::string& str);
+bool toBool(const SCML_STRING& str);
+int toInt(const SCML_STRING& str);
+float toFloat(const SCML_STRING& str);
 
-std::string toString(bool b);
-std::string toString(int n);
-std::string toString(float f, int precision = -1);
+SCML_STRING toString(bool b);
+SCML_STRING toString(int n);
+SCML_STRING toString(float f, int precision = -1);
 
 
-bool xmlGetBoolAttr(TiXmlElement* elem, const std::string& attribute);
-bool xmlGetBoolAttr(TiXmlElement* elem, const std::string& attribute, bool defaultValue);
-std::string xmlGetStringAttr(TiXmlElement* elem, const std::string& attribute);
-std::string xmlGetStringAttr(TiXmlElement* elem, const std::string& attribute, const std::string& default_value);
-int xmlGetIntAttr(TiXmlElement* elem, const std::string& attribute);
-int xmlGetIntAttr(TiXmlElement* elem, const std::string& attribute, int default_value);
-float xmlGetFloatAttr(TiXmlElement* elem, const std::string& attribute);
-float xmlGetFloatAttr(TiXmlElement* elem, const std::string& attribute, float default_value);
+bool xmlGetBoolAttr(TiXmlElement* elem, const SCML_STRING& attribute);
+bool xmlGetBoolAttr(TiXmlElement* elem, const SCML_STRING& attribute, bool defaultValue);
+SCML_STRING xmlGetStringAttr(TiXmlElement* elem, const SCML_STRING& attribute);
+SCML_STRING xmlGetStringAttr(TiXmlElement* elem, const SCML_STRING& attribute, const SCML_STRING& default_value);
+int xmlGetIntAttr(TiXmlElement* elem, const SCML_STRING& attribute);
+int xmlGetIntAttr(TiXmlElement* elem, const SCML_STRING& attribute, int default_value);
+float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute);
+float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute, float default_value);
 
 
 

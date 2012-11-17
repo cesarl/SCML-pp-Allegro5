@@ -3,7 +3,6 @@
 
 #include "SFML/Graphics/Texture.hpp"
 #include "SCMLpp.h"
-#include <map>
 
 /*! \brief Namespace for SFML renderer
 */
@@ -15,12 +14,12 @@ class FileSystem : public SCML::FileSystem
     public:
     
     // Folder, File
-    std::map<std::pair<int, int>, sf::Texture*> images;
+    SCML_MAP(SCML_PAIR(int, int), sf::Texture*) images;
     
     virtual ~FileSystem();
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     
     sf::Texture* getImage(int folderID, int fileID) const;
     
@@ -40,7 +39,7 @@ class Entity : public SCML::Entity
     sf::RenderTarget* setScreen(sf::RenderTarget* scr);
     
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y);
 };
 

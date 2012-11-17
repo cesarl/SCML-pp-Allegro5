@@ -10,8 +10,6 @@
 #define PATH_MAX MAX_PATH
 #endif
 
-using namespace std;
-
 namespace SCML
 {
 
@@ -35,7 +33,7 @@ Data::Data()
     : pixel_art_mode(false), meta_data(NULL)
 {}
 
-Data::Data(const std::string& file)
+Data::Data(const SCML_STRING& file)
     : pixel_art_mode(false), meta_data(NULL)
 {
     load(file);
@@ -79,15 +77,15 @@ Data::~Data()
     clear();
 }
 
-bool Data::load(const std::string& file)
+bool Data::load(const SCML_STRING& file)
 {
     name = file;
     
     TiXmlDocument doc;
 
-    if(!doc.LoadFile(file.c_str()))
+    if(!doc.LoadFile(SCML_TO_CSTRING(file)))
     {
-        SCML::log("SCML::Data failed to load: Couldn't open %s.\n", file.c_str());
+        SCML::log("SCML::Data failed to load: Couldn't open %s.\n", SCML_TO_CSTRING(file));
         SCML::log("%s\n", doc.ErrorDesc());
         return false;
     }
@@ -95,7 +93,7 @@ bool Data::load(const std::string& file)
     TiXmlElement* root = doc.FirstChildElement("spriter_data");
     if(root == NULL)
     {
-        SCML::log("SCML::Data failed to load: No spriter_data XML element in %s.\n", file.c_str());
+        SCML::log("SCML::Data failed to load: No spriter_data XML element in %s.\n", SCML_TO_CSTRING(file));
         return false;
     }
     
@@ -128,7 +126,7 @@ bool Data::load(TiXmlElement* elem)
         Folder* folder = new Folder;
         if(folder->load(child))
         {
-            if(!folders.insert(make_pair(folder->id, folder)).second)
+            if(!SCML_MAP_INSERT(folders, folder->id, folder))
             {
                 SCML::log("SCML::Data loaded a folder with a duplicate id (%d).\n", folder->id);
                 delete folder;
@@ -146,7 +144,7 @@ bool Data::load(TiXmlElement* elem)
         Atlas* atlas = new Atlas;
         if(atlas->load(child))
         {
-            if(!atlases.insert(make_pair(atlas->id, atlas)).second)
+            if(!SCML_MAP_INSERT(atlases, atlas->id, atlas))
             {
                 SCML::log("SCML::Data loaded an atlas with a duplicate id (%d).\n", atlas->id);
                 delete atlas;
@@ -164,7 +162,7 @@ bool Data::load(TiXmlElement* elem)
         Entity* entity = new Entity;
         if(entity->load(child))
         {
-            if(!entities.insert(make_pair(entity->id, entity)).second)
+            if(!SCML_MAP_INSERT(entities, entity->id, entity))
             {
                 SCML::log("SCML::Data loaded an entity with a duplicate id (%d).\n", entity->id);
                 delete entity;
@@ -182,7 +180,7 @@ bool Data::load(TiXmlElement* elem)
         Character_Map* character_map = new Character_Map;
         if(character_map->load(child))
         {
-            if(!character_maps.insert(make_pair(character_map->id, character_map)).second)
+            if(!SCML_MAP_INSERT(character_maps, character_map->id, character_map))
             {
                 SCML::log("SCML::Data loaded a character_map with a duplicate id (%d).\n", character_map->id);
                 delete character_map;
@@ -204,10 +202,10 @@ bool Data::load(TiXmlElement* elem)
 
 void Data::log(int recursive_depth) const
 {
-    SCML::log("scml_version=%s\n", scml_version.c_str());
-    SCML::log("generator=%s\n", generator.c_str());
-    SCML::log("generator_version=%s\n", generator_version.c_str());
-    SCML::log("pixel_art_mode=%s\n", toString(pixel_art_mode).c_str());
+    SCML::log("scml_version=%s\n", SCML_TO_CSTRING(scml_version));
+    SCML::log("generator=%s\n", SCML_TO_CSTRING(generator));
+    SCML::log("generator_version=%s\n", SCML_TO_CSTRING(generator_version));
+    SCML::log("pixel_art_mode=%s\n", SCML_TO_CSTRING(toString(pixel_art_mode)));
     
     if(recursive_depth == 0)
         return;
@@ -215,29 +213,33 @@ void Data::log(int recursive_depth) const
     if(meta_data != NULL)
         meta_data->log(recursive_depth - 1);
     
-    for(map<int, Folder*>::const_iterator e = folders.begin(); e != folders.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(folders, int, Folder*, item)
     {
         SCML::log("Folder:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
-    for(map<int, Atlas*>::const_iterator e = atlases.begin(); e != atlases.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(atlases, int, Atlas*, item)
     {
         SCML::log("Atlas:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
-    for(map<int, Entity*>::const_iterator e = entities.begin(); e != entities.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(entities, int, Entity*, item)
     {
         SCML::log("Entity:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
-    for(map<int, Character_Map*>::const_iterator e = character_maps.begin(); e != character_maps.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(character_maps, int, Character_Map*, item)
     {
         SCML::log("Character_Map:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
     SCML::log("Document_Info:\n");
     document_info.log(recursive_depth - 1);
@@ -253,28 +255,32 @@ void Data::clear()
     delete meta_data;
     meta_data = NULL;
     
-    for(map<int, Folder*>::iterator e = folders.begin(); e != folders.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(folders, int, Folder*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH;
     folders.clear();
     
-    for(map<int, Atlas*>::iterator e = atlases.begin(); e != atlases.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(atlases, int, Atlas*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH;
     atlases.clear();
     
-    for(map<int, Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(entities, int, Entity*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH;
     entities.clear();
     
-    for(map<int, Character_Map*>::iterator e = character_maps.begin(); e != character_maps.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(character_maps, int, Character_Map*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH;
     character_maps.clear();
     
     document_info.clear();
@@ -283,11 +289,11 @@ void Data::clear()
 
 int Data::getNumAnimations(int entity) const
 {
-    map<int, Entity*>::const_iterator e = entities.find(entity);
-    if(e == entities.end())
+    Entity* e = SCML_MAP_FIND(entities, entity);
+    if(e == NULL)
         return -1;
     
-    return e->second->animations.size();
+    return SCML_MAP_SIZE(e->animations);
 }
 
 
@@ -309,9 +315,9 @@ bool Data::Meta_Data::load(TiXmlElement* elem)
         Variable* variable = new Variable;
         if(variable->load(child))
         {
-            if(!variables.insert(make_pair(variable->name, variable)).second)
+            if(!SCML_MAP_INSERT(variables, variable->name, variable))
             {
-                SCML::log("SCML::Data::Meta_Data loaded a variable with a duplicate name (%s).\n", variable->name.c_str());
+                SCML::log("SCML::Data::Meta_Data loaded a variable with a duplicate name (%s).\n", SCML_TO_CSTRING(variable->name));
                 delete variable;
             }
         }
@@ -327,9 +333,9 @@ bool Data::Meta_Data::load(TiXmlElement* elem)
         Tag* tag = new Tag;
         if(tag->load(child))
         {
-            if(!tags.insert(make_pair(tag->name, tag)).second)
+            if(!SCML_MAP_INSERT(tags, tag->name, tag))
             {
-                SCML::log("SCML::Data::Meta_Data loaded a tag with a duplicate name (%s).\n", tag->name.c_str());
+                SCML::log("SCML::Data::Meta_Data loaded a tag with a duplicate name (%s).\n", SCML_TO_CSTRING(tag->name));
                 delete tag;
             }
         }
@@ -348,32 +354,36 @@ void Data::Meta_Data::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
     
-    for(map<std::string, Variable*>::const_iterator e = variables.begin(); e != variables.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(variables, SCML_STRING, Variable*, item)
     {
         SCML::log("Variable:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
-    for(map<std::string, Tag*>::const_iterator e = tags.begin(); e != tags.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(tags, SCML_STRING, Tag*, item)
     {
         SCML::log("Tag:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
 void Data::Meta_Data::clear()
 {
-    for(map<std::string, Variable*>::iterator e = variables.begin(); e != variables.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(variables, SCML_STRING, Variable*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     variables.clear();
     
-    for(map<std::string, Tag*>::iterator e = tags.begin(); e != tags.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(tags, SCML_STRING, Tag*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     tags.clear();
 }
 
@@ -402,16 +412,16 @@ bool Data::Meta_Data::Variable::load(TiXmlElement* elem)
     else if(type == "float")
         value_float = xmlGetFloatAttr(elem, "value", 0.0f);
     else
-        SCML::log("Data::Meta_Data::Variable loaded invalid variable type (%s) named '%s'.\n", type.c_str(), name.c_str());
+        SCML::log("Data::Meta_Data::Variable loaded invalid variable type (%s) named '%s'.\n", SCML_TO_CSTRING(type), SCML_TO_CSTRING(name));
     return true;
 }
 
 void Data::Meta_Data::Variable::log(int recursive_depth) const
 {
-    SCML::log("name=%s\n", name.c_str());
-    SCML::log("type=%s\n", type.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
+    SCML::log("type=%s\n", SCML_TO_CSTRING(type));
     if(type == "string")
-        SCML::log("value=%s\n", value_string.c_str());
+        SCML::log("value=%s\n", SCML_TO_CSTRING(value_string));
     else if(type == "int")
         SCML::log("value=%d\n", value_int);
     else if(type == "float")
@@ -447,7 +457,7 @@ bool Data::Meta_Data::Tag::load(TiXmlElement* elem)
 
 void Data::Meta_Data::Tag::log(int recursive_depth) const
 {
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
 }
 
 void Data::Meta_Data::Tag::clear()
@@ -479,7 +489,7 @@ bool Data::Folder::load(TiXmlElement* elem)
         File* file = new File;
         if(file->load(child))
         {
-            if(!files.insert(make_pair(file->id, file)).second)
+            if(!SCML_MAP_INSERT(files, file->id, file))
             {
                 SCML::log("SCML::Data::Folder loaded a file with a duplicate id (%d).\n", file->id);
                 delete file;
@@ -498,16 +508,17 @@ bool Data::Folder::load(TiXmlElement* elem)
 void Data::Folder::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     
     if(recursive_depth == 0)
         return;
     
-    for(map<int, File*>::const_iterator e = files.begin(); e != files.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(files, int, File*, item)
     {
         SCML::log("File:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -516,10 +527,11 @@ void Data::Folder::clear()
     id = 0;
     name.clear();
     
-    for(map<int, File*>::iterator e = files.begin(); e != files.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(files, int, File*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     files.clear();
 }
 
@@ -558,9 +570,9 @@ bool Data::Folder::File::load(TiXmlElement* elem)
 
 void Data::Folder::File::log(int recursive_depth) const
 {
-    SCML::log("type=%s\n", type.c_str());
+    SCML::log("type=%s\n", SCML_TO_CSTRING(type));
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     SCML::log("pivot_x=%f\n", pivot_x);
     SCML::log("pivot_y=%f\n", pivot_y);
     SCML::log("width=%d\n", width);
@@ -615,7 +627,7 @@ bool Data::Atlas::load(TiXmlElement* elem)
         Folder* folder = new Folder;
         if(folder->load(child))
         {
-            if(!folders.insert(make_pair(folder->id, folder)).second)
+            if(!SCML_MAP_INSERT(folders, folder->id, folder))
             {
                 SCML::log("SCML::Data::Atlas loaded a folder with a duplicate id (%d).\n", folder->id);
                 delete folder;
@@ -634,17 +646,18 @@ bool Data::Atlas::load(TiXmlElement* elem)
 void Data::Atlas::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("data_path=%s\n", data_path.c_str());
-    SCML::log("image_path=%s\n", image_path.c_str());
+    SCML::log("data_path=%s\n", SCML_TO_CSTRING(data_path));
+    SCML::log("image_path=%s\n", SCML_TO_CSTRING(image_path));
     
     if(recursive_depth == 0)
         return;
     
-    for(map<int, Folder*>::const_iterator e = folders.begin(); e != folders.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(folders, int, Folder*, item)
     {
         SCML::log("Folder:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -654,10 +667,11 @@ void Data::Atlas::clear()
     data_path.clear();
     image_path.clear();
     
-    for(map<int, Folder*>::iterator e = folders.begin(); e != folders.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(folders, int, Folder*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     folders.clear();
 }
 
@@ -685,7 +699,7 @@ bool Data::Atlas::Folder::load(TiXmlElement* elem)
         Image* image = new Image;
         if(image->load(child))
         {
-            if(!images.insert(make_pair(image->id, image)).second)
+            if(!SCML_MAP_INSERT(images, image->id, image))
             {
                 SCML::log("SCML::Data::Atlas::Folder loaded an image with a duplicate id (%d).\n", image->id);
                 delete image;
@@ -704,16 +718,17 @@ bool Data::Atlas::Folder::load(TiXmlElement* elem)
 void Data::Atlas::Folder::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     
     if(recursive_depth == 0)
         return;
     
-    for(map<int, Image*>::const_iterator e = images.begin(); e != images.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(images, int, Image*, item)
     {
         SCML::log("Image:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -722,10 +737,11 @@ void Data::Atlas::Folder::clear()
     id = 0;
     name.clear();
     
-    for(map<int, Image*>::iterator e = images.begin(); e != images.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(images, int, Image*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     images.clear();
 }
 
@@ -754,7 +770,7 @@ bool Data::Atlas::Folder::Image::load(TiXmlElement* elem)
 void Data::Atlas::Folder::Image::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("full_path=%s\n", full_path.c_str());
+    SCML::log("full_path=%s\n", SCML_TO_CSTRING(full_path));
 }
 
 void Data::Atlas::Folder::Image::clear()
@@ -799,7 +815,7 @@ bool Data::Entity::load(TiXmlElement* elem)
         Animation* animation = new Animation;
         if(animation->load(child))
         {
-            if(!animations.insert(make_pair(animation->id, animation)).second)
+            if(!SCML_MAP_INSERT(animations, animation->id, animation))
             {
                 SCML::log("SCML::Data::Entity loaded an animation with a duplicate id (%d).\n", animation->id);
                 delete animation;
@@ -818,7 +834,7 @@ bool Data::Entity::load(TiXmlElement* elem)
 void Data::Entity::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     
     if(recursive_depth == 0)
         return;
@@ -829,11 +845,12 @@ void Data::Entity::log(int recursive_depth) const
         meta_data->log(recursive_depth-1);
     }
     
-    for(map<int, Animation*>::const_iterator e = animations.begin(); e != animations.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(animations, int, Animation*, item)
     {
         SCML::log("Animation:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -844,10 +861,11 @@ void Data::Entity::clear()
     delete meta_data;
     meta_data = NULL;
     
-    for(map<int, Animation*>::iterator e = animations.begin(); e != animations.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(animations, int, Animation*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     animations.clear();
 }
 
@@ -897,7 +915,7 @@ bool Data::Entity::Animation::load(TiXmlElement* elem)
         Timeline* timeline = new Timeline;
         if(timeline->load(child))
         {
-            if(!timelines.insert(make_pair(timeline->id, timeline)).second)
+            if(!SCML_MAP_INSERT(timelines, timeline->id, timeline))
             {
                 SCML::log("SCML::Data::Entity::Animation loaded a timeline with a duplicate id (%d).\n", timeline->id);
                 delete timeline;
@@ -916,9 +934,9 @@ bool Data::Entity::Animation::load(TiXmlElement* elem)
 void Data::Entity::Animation::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     SCML::log("length=%d\n", length);
-    SCML::log("looping=%s\n", looping.c_str());
+    SCML::log("looping=%s\n", SCML_TO_CSTRING(looping));
     SCML::log("loop_to=%d\n", loop_to);
     
     if(recursive_depth == 0)
@@ -932,11 +950,12 @@ void Data::Entity::Animation::log(int recursive_depth) const
     
     mainline.log(recursive_depth - 1);
     
-    for(map<int, Timeline*>::const_iterator e = timelines.begin(); e != timelines.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(timelines, int, Timeline*, item)
     {
         SCML::log("Timeline:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -953,10 +972,11 @@ void Data::Entity::Animation::clear()
     
     mainline.clear();
     
-    for(map<int, Timeline*>::iterator e = timelines.begin(); e != timelines.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(timelines, int, Timeline*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     timelines.clear();
 }
 
@@ -983,7 +1003,7 @@ bool Data::Entity::Animation::Mainline::load(TiXmlElement* elem)
         Key* key = new Key;
         if(key->load(child))
         {
-            if(!keys.insert(make_pair(key->id, key)).second)
+            if(!SCML_MAP_INSERT(keys, key->id, key))
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline loaded a key with a duplicate id (%d).\n", key->id);
                 delete key;
@@ -1004,20 +1024,22 @@ void Data::Entity::Animation::Mainline::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
         
-    for(map<int, Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
         SCML::log("Key:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
 void Data::Entity::Animation::Mainline::clear()
 {
-    for(map<int, Key*>::iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     keys.clear();
 }
 
@@ -1056,7 +1078,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Bone* bone = new Bone;
         if(bone->load(child))
         {
-            if(!bones.insert(make_pair(bone->id, bone)).second)
+            if(!SCML_MAP_INSERT(bones, bone->id, bone))
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded a bone with a duplicate id (%d).\n", bone->id);
                 delete bone;
@@ -1074,7 +1096,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Bone_Ref* bone_ref = new Bone_Ref;
         if(bone_ref->load(child))
         {
-            if(!bones.insert(make_pair(bone_ref->id, Bone_Container(bone_ref))).second)
+            if(!SCML_MAP_INSERT(bones, bone_ref->id, Bone_Container(bone_ref)))
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded a bone_ref with a duplicate id (%d).\n", bone_ref->id);
                 delete bone_ref;
@@ -1093,7 +1115,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Object* object = new Object;
         if(object->load(child))
         {
-            if(!objects.insert(make_pair(object->id, object)).second)
+            if(!SCML_MAP_INSERT(objects, object->id, object))
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded an object with a duplicate id (%d).\n", object->id);
                 delete object;
@@ -1111,7 +1133,7 @@ bool Data::Entity::Animation::Mainline::Key::load(TiXmlElement* elem)
         Object_Ref* object_ref = new Object_Ref;
         if(object_ref->load(child))
         {
-            if(!objects.insert(make_pair(object_ref->id, Object_Container(object_ref))).second)
+            if(!SCML_MAP_INSERT(objects, object_ref->id, Object_Container(object_ref)))
             {
                 SCML::log("SCML::Data::Entity::Animation::Mainline::Key loaded an object_ref with a duplicate id (%d).\n", object_ref->id);
                 delete object_ref;
@@ -1141,33 +1163,35 @@ void Data::Entity::Animation::Mainline::Key::log(int recursive_depth) const
         meta_data->log(recursive_depth-1);
     }
     
-    for(map<int, Bone_Container>::const_iterator e = bones.begin(); e != bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(bones, int, Bone_Container, item)
     {
-        if(e->second.hasBone())
+        if(item.hasBone())
         {
             SCML::log("Bone:\n");
-            e->second.bone->log(recursive_depth - 1);
+            item.bone->log(recursive_depth - 1);
         }
-        if(e->second.hasBone_Ref())
+        if(item.hasBone_Ref())
         {
             SCML::log("Bone_Ref:\n");
-            e->second.bone_ref->log(recursive_depth - 1);
+            item.bone_ref->log(recursive_depth - 1);
         }
     }
+    SCML_END_MAP_FOREACH_CONST;
     
-    for(map<int, Object_Container>::const_iterator e = objects.begin(); e != objects.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(objects, int, Object_Container, item)
     {
-        if(e->second.hasObject())
+        if(item.hasObject())
         {
             SCML::log("Object:\n");
-            e->second.object->log(recursive_depth - 1);
+            item.object->log(recursive_depth - 1);
         }
-        if(e->second.hasObject_Ref())
+        if(item.hasObject_Ref())
         {
             SCML::log("Object_Ref:\n");
-            e->second.object_ref->log(recursive_depth - 1);
+            item.object_ref->log(recursive_depth - 1);
         }
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Data::Entity::Animation::Mainline::Key::clear()
@@ -1178,18 +1202,20 @@ void Data::Entity::Animation::Mainline::Key::clear()
     delete meta_data;
     meta_data = NULL;
     
-    for(map<int, Bone_Container>::iterator e = bones.begin(); e != bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(bones, int, Bone_Container, item)
     {
-        delete e->second.bone;
-        delete e->second.bone_ref;
+        delete item.bone;
+        delete item.bone_ref;
     }
+    SCML_END_MAP_FOREACH_CONST;
     bones.clear();
     
-    for(map<int, Object_Container>::iterator e = objects.begin(); e != objects.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(objects, int, Object_Container, item)
     {
-        delete e->second.object;
-        delete e->second.object_ref;
+        delete item.object;
+        delete item.object_ref;
     }
+    SCML_END_MAP_FOREACH_CONST;
     objects.clear();
 }
 
@@ -1408,12 +1434,12 @@ void Data::Entity::Animation::Mainline::Key::Object::log(int recursive_depth) co
 {
     SCML::log("id=%d\n", id);
     SCML::log("parent=%d\n", parent);
-    SCML::log("object_type=%s\n", object_type.c_str());
+    SCML::log("object_type=%s\n", SCML_TO_CSTRING(object_type));
     SCML::log("atlas=%d\n", atlas);
     SCML::log("folder=%d\n", folder);
     SCML::log("file=%d\n", file);
-    SCML::log("usage=%s\n", usage.c_str());
-    SCML::log("blend_mode=%s\n", blend_mode.c_str());
+    SCML::log("usage=%s\n", SCML_TO_CSTRING(usage));
+    SCML::log("blend_mode=%s\n", SCML_TO_CSTRING(blend_mode));
     SCML::log("x=%f\n", x);
     SCML::log("y=%f\n", y);
     SCML::log("pivot_x=%f\n", pivot_x);
@@ -1431,10 +1457,10 @@ void Data::Entity::Animation::Mainline::Key::Object::log(int recursive_depth) co
     SCML::log("g=%f\n", g);
     SCML::log("b=%f\n", b);
     SCML::log("a=%f\n", a);
-    SCML::log("variable_type=%s\n", variable_type.c_str());
+    SCML::log("variable_type=%s\n", SCML_TO_CSTRING(variable_type));
     if(variable_type == "string")
     {
-        SCML::log("value=%s\n", value_string.c_str());
+        SCML::log("value=%s\n", SCML_TO_CSTRING(value_string));
     }
     else if(variable_type == "int")
     {
@@ -1609,7 +1635,7 @@ bool Data::Entity::Animation::Timeline::load(TiXmlElement* elem)
         Key* key = new Key;
         if(key->load(child))
         {
-            if(!keys.insert(make_pair(key->id, key)).second)
+            if(!SCML_MAP_INSERT(keys, key->id, key))
             {
                 SCML::log("SCML::Data::Entity::Animation::Timeline loaded a key with a duplicate id (%d).\n", key->id);
                 delete key;
@@ -1628,10 +1654,10 @@ bool Data::Entity::Animation::Timeline::load(TiXmlElement* elem)
 void Data::Entity::Animation::Timeline::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
-    SCML::log("object_type=%s\n", object_type.c_str());
-    SCML::log("variable_type=%s\n", variable_type.c_str());
-    SCML::log("usage=%s\n", usage.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
+    SCML::log("object_type=%s\n", SCML_TO_CSTRING(object_type));
+    SCML::log("variable_type=%s\n", SCML_TO_CSTRING(variable_type));
+    SCML::log("usage=%s\n", SCML_TO_CSTRING(usage));
     
     if(recursive_depth == 0)
         return;
@@ -1642,11 +1668,12 @@ void Data::Entity::Animation::Timeline::log(int recursive_depth) const
         meta_data->log(recursive_depth-1);
     }
     
-    for(map<int, Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
         SCML::log("Key:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -1661,10 +1688,11 @@ void Data::Entity::Animation::Timeline::clear()
     delete meta_data;
     meta_data = NULL;
     
-    for(map<int, Key*>::iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     keys.clear();
 }
 
@@ -1728,7 +1756,7 @@ void Data::Entity::Animation::Timeline::Key::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
     SCML::log("time=%d\n", time);
-    SCML::log("curve_type=%s\n", curve_type.c_str());
+    SCML::log("curve_type=%s\n", SCML_TO_CSTRING(curve_type));
     SCML::log("c1=%f\n", c1);
     SCML::log("c2=%f\n", c2);
     SCML::log("spin=%d\n", spin);
@@ -1792,9 +1820,9 @@ bool Data::Meta_Data_Tweenable::load(TiXmlElement* elem)
         Variable* variable = new Variable;
         if(variable->load(child))
         {
-            if(!variables.insert(make_pair(variable->name, variable)).second)
+            if(!SCML_MAP_INSERT(variables, variable->name, variable))
             {
-                SCML::log("SCML::Data::Meta_Data_Tweenable loaded a variable with a duplicate name (%s).\n", variable->name.c_str());
+                SCML::log("SCML::Data::Meta_Data_Tweenable loaded a variable with a duplicate name (%s).\n", SCML_TO_CSTRING(variable->name));
                 delete variable;
             }
         }
@@ -1813,20 +1841,22 @@ void Data::Meta_Data_Tweenable::log(int recursive_depth) const
     if(recursive_depth == 0)
         return;
         
-    for(map<std::string, Variable*>::const_iterator e = variables.begin(); e != variables.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(variables, SCML_STRING, Variable*, item)
     {
         SCML::log("Variable:\n");
-        e->second->log(recursive_depth - 1);
+        item->log(recursive_depth - 1);
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
 void Data::Meta_Data_Tweenable::clear()
 {
-    for(map<std::string, Variable*>::iterator e = variables.begin(); e != variables.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(variables, SCML_STRING, Variable*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     variables.clear();
 }
 
@@ -1866,15 +1896,15 @@ bool Data::Meta_Data_Tweenable::Variable::load(TiXmlElement* elem)
 
 void Data::Meta_Data_Tweenable::Variable::log(int recursive_depth) const
 {
-    SCML::log("type=%s\n", type.c_str());
+    SCML::log("type=%s\n", SCML_TO_CSTRING(type));
     if(type == "string")
-        SCML::log("value=%s\n", value_string.c_str());
+        SCML::log("value=%s\n", SCML_TO_CSTRING(value_string));
     else if(type == "int")
         SCML::log("value=%d\n", value_int);
     else if(type == "float")
         SCML::log("value=%f\n", value_float);
         
-    SCML::log("curve_type=%s\n", curve_type.c_str());
+    SCML::log("curve_type=%s\n", SCML_TO_CSTRING(curve_type));
     SCML::log("c1=%f\n", c1);
     SCML::log("c2=%f\n", c2);
     
@@ -2049,11 +2079,11 @@ bool Data::Entity::Animation::Timeline::Key::Object::load(TiXmlElement* elem)
 
 void Data::Entity::Animation::Timeline::Key::Object::log(int recursive_depth) const
 {
-    //SCML::log("object_type=%s\n", object_type.c_str());
+    //SCML::log("object_type=%s\n", SCML_TO_CSTRING(object_type));
     SCML::log("atlas=%d\n", atlas);
     SCML::log("folder=%d\n", folder);
     SCML::log("file=%d\n", file);
-    //SCML::log("usage=%s\n", usage.c_str());
+    //SCML::log("usage=%s\n", SCML_TO_CSTRING(usage));
     SCML::log("x=%f\n", x);
     SCML::log("y=%f\n", y);
     SCML::log("pivot_x=%f\n", pivot_x);
@@ -2067,11 +2097,11 @@ void Data::Entity::Animation::Timeline::Key::Object::log(int recursive_depth) co
     SCML::log("g=%f\n", g);
     SCML::log("b=%f\n", b);
     SCML::log("a=%f\n", a);
-    SCML::log("blend_mode=%s\n", blend_mode.c_str());
-    //SCML::log("variable_type=%s\n", variable_type.c_str());
+    SCML::log("blend_mode=%s\n", SCML_TO_CSTRING(blend_mode));
+    //SCML::log("variable_type=%s\n", SCML_TO_CSTRING(variable_type));
     //if(variable_type == "string")
     {
-        SCML::log("value=%s\n", value_string.c_str());
+        SCML::log("value=%s\n", SCML_TO_CSTRING(value_string));
     }
     /*else if(variable_type == "int")
     {
@@ -2174,7 +2204,7 @@ bool Data::Character_Map::load(TiXmlElement* elem)
 void Data::Character_Map::log(int recursive_depth) const
 {
     SCML::log("id=%d\n", id);
-    SCML::log("name=%s\n", name.c_str());
+    SCML::log("name=%s\n", SCML_TO_CSTRING(name));
     
     if(recursive_depth == 0)
         return;
@@ -2273,12 +2303,12 @@ bool Data::Document_Info::load(TiXmlElement* elem)
 
 void Data::Document_Info::log(int recursive_depth) const
 {
-    SCML::log("author=%s\n", author.c_str());
-    SCML::log("copyright=%s\n", copyright.c_str());
-    SCML::log("license=%s\n", license.c_str());
-    SCML::log("version=%s\n", version.c_str());
-    SCML::log("last_modified=%s\n", last_modified.c_str());
-    SCML::log("notes=%s\n", notes.c_str());
+    SCML::log("author=%s\n", SCML_TO_CSTRING(author));
+    SCML::log("copyright=%s\n", SCML_TO_CSTRING(copyright));
+    SCML::log("license=%s\n", SCML_TO_CSTRING(license));
+    SCML::log("version=%s\n", SCML_TO_CSTRING(version));
+    SCML::log("last_modified=%s\n", SCML_TO_CSTRING(last_modified));
+    SCML::log("notes=%s\n", SCML_TO_CSTRING(notes));
 }
 
 void Data::Document_Info::clear()
@@ -2297,14 +2327,14 @@ void Data::Document_Info::clear()
 
 
 
-static bool pathIsAbsolute(const std::string& path)
+static bool pathIsAbsolute(const SCML_STRING& path)
 {
     #ifdef WIN32
-    if(path.size() < 3)
+    if(SCML_STRING_SIZE(path) < 3)
         return false;
     return (isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
     #else
-    if(path.size() < 1)
+    if(SCML_STRING_SIZE(path) < 1)
         return false;
     return (path[0] == '/');
     #endif
@@ -2314,31 +2344,33 @@ static bool pathIsAbsolute(const std::string& path)
 
 void FileSystem::load(SCML::Data* data)
 {
-    if(data == NULL || data->name.size() == 0)
+    if(data == NULL || SCML_STRING_SIZE(data->name) == 0)
         return;
     
-    string basedir;
+    SCML_STRING basedir;
     if(!pathIsAbsolute(data->name))
     {
         // Create a relative directory name for the path's base
         char buf[PATH_MAX];
-        snprintf(buf, PATH_MAX, "%s", data->name.c_str());
-        basedir = dirname(buf);
-        if(basedir.size() > 0 && basedir[basedir.size()-1] != '/')
-            basedir += '/';
+        snprintf(buf, PATH_MAX, "%s", SCML_TO_CSTRING(data->name));
+        SCML_SET_STRING(basedir, dirname(buf));
+        if(SCML_STRING_SIZE(basedir) > 0 && basedir[SCML_STRING_SIZE(basedir)-1] != '/')
+            SCML_STRING_APPEND(basedir, '/');
     }
     
-    for(map<int, SCML::Data::Folder*>::iterator e = data->folders.begin(); e != data->folders.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(data->folders, int, SCML::Data::Folder*, folder)
     {
-        for(map<int, SCML::Data::Folder::File*>::iterator f = e->second->files.begin(); f != e->second->files.end(); f++)
+        SCML_BEGIN_MAP_FOREACH_CONST(folder->files, int, SCML::Data::Folder::File*, file)
         {
-            if(f->second->type == "image")
+            if(file->type == "image")
             {
-                printf("Loading \"%s\"\n", (basedir + f->second->name).c_str());
-                loadImageFile(e->first, f->first, basedir + f->second->name);
+                printf("Loading \"%s\"\n", SCML_TO_CSTRING(basedir + file->name));
+                loadImageFile(folder->id, file->id, basedir + file->name);
             }
         }
+        SCML_END_MAP_FOREACH_CONST;
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 
@@ -2367,17 +2399,17 @@ void Entity::load(SCML::Data* data)
     if(data == NULL)
         return;
     
-    map<int, SCML::Data::Entity*>::iterator e = data->entities.find(entity);
-    if(e == data->entities.end())
+    SCML::Data::Entity* entity_ptr = SCML_MAP_FIND(data->entities, entity);
+    if(entity_ptr == NULL)
         return;
     
-    SCML::Data::Entity* entity_ptr = e->second;
-    
     name = entity_ptr->name;
-    for(map<int, SCML::Data::Entity::Animation*>::iterator a = entity_ptr->animations.begin(); a != entity_ptr->animations.end(); a++)
+    
+    SCML_BEGIN_MAP_FOREACH_CONST(entity_ptr->animations, int, SCML::Data::Entity::Animation*, item)
     {
-        animations.insert(make_pair(a->first, new Animation(a->second)));
+        SCML_MAP_INSERT(animations, item->id, new Animation(item));
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Entity::clear()
@@ -2387,10 +2419,11 @@ void Entity::clear()
     key = -1;
     time = 0;
     
-    for(map<int, Animation*>::iterator e = animations.begin(); e != animations.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(animations, int, Animation*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     animations.clear();
 }
 
@@ -2491,17 +2524,18 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
     
     
     // Go through each object
-    for(map<int, Animation::Mainline::Key::Object_Container>::iterator e = key_ptr->objects.begin(); e != key_ptr->objects.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(key_ptr->objects, int, Animation::Mainline::Key::Object_Container, item)
     {
-        if(e->second.hasObject())
+        if(item.hasObject())
         {
-            draw_simple_object(e->second.object);
+            draw_simple_object(item.object);
         }
         else
         {
-            draw_tweened_object(e->second.object_ref);
+            draw_tweened_object(item.object_ref);
         }
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 
@@ -2532,8 +2566,8 @@ void Entity::draw_simple_object(Animation::Mainline::Key::Object* obj1)
     std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
     
     // Rotate about the pivot point and draw from the center of the image
-    float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
-    float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
+    float offset_x = (pivot_x_ratio - 0.5f)*SCML_PAIR_FIRST(img_dims);
+    float offset_y = (pivot_y_ratio - 0.5f)*SCML_PAIR_SECOND(img_dims);
     float sprite_x = -offset_x*obj_transform.scale_x;
     float sprite_y = -offset_y*obj_transform.scale_y;
     
@@ -2592,8 +2626,8 @@ void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
         std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
         
         // Rotate about the pivot point and draw from the center of the image
-        float offset_x = (pivot_x_ratio - 0.5f)*img_dims.first;
-        float offset_y = (pivot_y_ratio - 0.5f)*img_dims.second;
+        float offset_x = (pivot_x_ratio - 0.5f)*SCML_PAIR_FIRST(img_dims);
+        float offset_y = (pivot_y_ratio - 0.5f)*SCML_PAIR_SECOND(img_dims);
         float sprite_x = -offset_x*obj_transform.scale_x;
         float sprite_y = -offset_y*obj_transform.scale_y;
         
@@ -2689,35 +2723,36 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
     this->nextKey = nextKey;
     this->time = time;
     this->base_transform = base_transform;
-    transforms.clear();
+    SCML_VECTOR_CLEAR(transforms);
     
     Entity::Animation::Mainline::Key* key_ptr = entity_ptr->getKey(animation, key);
     
     // Resize the transform vector according to the biggest bone index
     int max_index = -1;
-    for(map<int, Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key_ptr->bones.begin(); e != key_ptr->bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(key_ptr->bones, int, Animation::Mainline::Key::Bone_Container, item)
     {
         int index = -1;
-        if(e->second.hasBone_Ref())
-            index = e->second.bone_ref->id;
-        else if(e->second.hasBone())
-            index = e->second.bone->id;
+        if(item.hasBone_Ref())
+            index = item.bone_ref->id;
+        else if(item.hasBone())
+            index = item.bone->id;
         
         if(max_index < index)
             max_index = index;
     }
+    SCML_END_MAP_FOREACH_CONST;
     
     if(max_index <= 0)
         return;
     
-    transforms.resize(max_index+1);
+    SCML_VECTOR_RESIZE(transforms, max_index+1);
     
     // Calculate and store the transforms
-    for(map<int, Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key_ptr->bones.begin(); e != key_ptr->bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(key_ptr->bones, int, Animation::Mainline::Key::Bone_Container, item)
     {
-        if(e->second.hasBone_Ref())
+        if(item.hasBone_Ref())
         {
-            Animation::Mainline::Key::Bone_Ref* ref1 = e->second.bone_ref;
+            Animation::Mainline::Key::Bone_Ref* ref1 = item.bone_ref;
             
             // Dereference bone_refs
             Animation::Timeline::Key* b_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
@@ -2755,9 +2790,9 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
             }
             
         }
-        else if(e->second.hasBone())
+        else if(item.hasBone())
         {
-            Animation::Mainline::Key::Bone* bone1 = e->second.bone;
+            Animation::Mainline::Key::Bone* bone1 = item.bone;
             
             // Assuming that bones come in hierarchical order so that the parents have already been processed.
             Transform parent_transform;
@@ -2776,6 +2811,7 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
             
         }
     }
+    SCML_END_MAP_FOREACH_CONST;
     
 }
 
@@ -2786,36 +2822,40 @@ Entity::Animation::Animation(SCML::Data::Entity::Animation* animation)
     : id(animation->id), name(animation->name), length(animation->length), looping(animation->looping), loop_to(animation->loop_to)
     , mainline(&animation->mainline)
 {
-    for(map<int, SCML::Data::Entity::Animation::Timeline*>::const_iterator e = animation->timelines.begin(); e != animation->timelines.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(animation->timelines, int, SCML::Data::Entity::Animation::Timeline*, item)
     {
-        timelines.insert(make_pair(e->first, new Timeline(e->second)));
+        SCML_MAP_INSERT(timelines, item->id, new Timeline(item));
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Entity::Animation::clear()
 {
-    for(map<int, SCML::Entity::Animation::Timeline*>::const_iterator e = timelines.begin(); e != timelines.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(timelines, int, Timeline*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     timelines.clear();
 }
 
 
 Entity::Animation::Mainline::Mainline(SCML::Data::Entity::Animation::Mainline* mainline)
 {
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key*>::const_iterator e = mainline->keys.begin(); e != mainline->keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(mainline->keys, int, SCML::Data::Entity::Animation::Mainline::Key*, item)
     {
-        keys.insert(make_pair(e->first, new Key(e->second)));
+        SCML_MAP_INSERT(keys, item->id, new Key(item));
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Entity::Animation::Mainline::clear()
 {
-    for(map<int, SCML::Entity::Animation::Mainline::Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     keys.clear();
 }
 
@@ -2824,48 +2864,54 @@ Entity::Animation::Mainline::Key::Key(SCML::Data::Entity::Animation::Mainline::K
     : id(key->id), time(key->time)
 {
     // Load bones and objects
-    // FIXME: Change this to use Bone_Containers
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Container>::iterator e = key->bones.begin(); e != key->bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(key->bones, int, SCML::Data::Entity::Animation::Mainline::Key::Bone_Container, item)
     {
-        if(e->second.hasBone())
+        if(item.hasBone())
         {
-            Bone* b = new Bone(e->second.bone);
-            bones.insert(make_pair(b->id, Bone_Container(b)));
+            Bone* b = new Bone(item.bone);
+            SCML_MAP_INSERT(bones, b->id, Bone_Container(b));
         }
-        if(e->second.hasBone_Ref())
+        if(item.hasBone_Ref())
         {
-            Bone_Ref* b = new Bone_Ref(e->second.bone_ref);
-            bones.insert(make_pair(b->id, Bone_Container(b)));
+            Bone_Ref* b = new Bone_Ref(item.bone_ref);
+            SCML_MAP_INSERT(bones, b->id, Bone_Container(b));
         }
     }
-    for(map<int, SCML::Data::Entity::Animation::Mainline::Key::Object_Container>::iterator e = key->objects.begin(); e != key->objects.end(); e++)
+    SCML_END_MAP_FOREACH_CONST;
+    
+    
+    SCML_BEGIN_MAP_FOREACH_CONST(key->objects, int, SCML::Data::Entity::Animation::Mainline::Key::Object_Container, item)
     {
-        if(e->second.hasObject())
+        if(item.hasObject())
         {
-            Object* b = new Object(e->second.object);
-            objects.insert(make_pair(b->id, Object_Container(b)));
+            Object* b = new Object(item.object);
+            SCML_MAP_INSERT(objects, b->id, Object_Container(b));
         }
-        if(e->second.hasObject_Ref())
+        if(item.hasObject_Ref())
         {
-            Object_Ref* b = new Object_Ref(e->second.object_ref);
-            objects.insert(make_pair(b->id, Object_Container(b)));
+            Object_Ref* b = new Object_Ref(item.object_ref);
+            SCML_MAP_INSERT(objects, b->id, Object_Container(b));
         }
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Entity::Animation::Mainline::Key::clear()
 {
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Bone_Container>::iterator e = bones.begin(); e != bones.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(bones, int, Bone_Container, item)
     {
-        delete e->second.bone;
-        delete e->second.bone_ref;
+        delete item.bone;
+        delete item.bone_ref;
     }
+    SCML_END_MAP_FOREACH_CONST;
     bones.clear();
-    for(map<int, SCML::Entity::Animation::Mainline::Key::Object_Container>::iterator e = objects.begin(); e != objects.end(); e++)
+    
+    SCML_BEGIN_MAP_FOREACH_CONST(objects, int, Object_Container, item)
     {
-        delete e->second.object;
-        delete e->second.object_ref;
+        delete item.object;
+        delete item.object_ref;
     }
+    SCML_END_MAP_FOREACH_CONST;
     objects.clear();
 }
 
@@ -2914,18 +2960,20 @@ void Entity::Animation::Mainline::Key::Object_Ref::clear()
 Entity::Animation::Timeline::Timeline(SCML::Data::Entity::Animation::Timeline* timeline)
     : id(timeline->id), name(timeline->name), object_type(timeline->object_type), variable_type(timeline->variable_type), usage(timeline->usage)
 {
-    for(map<int, SCML::Data::Entity::Animation::Timeline::Key*>::const_iterator e = timeline->keys.begin(); e != timeline->keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(timeline->keys, int, SCML::Data::Entity::Animation::Timeline::Key*, item)
     {
-        keys.insert(make_pair(e->first, new Key(e->second)));
+        SCML_MAP_INSERT(keys, item->id, new Key(item));
     }
+    SCML_END_MAP_FOREACH_CONST;
 }
 
 void Entity::Animation::Timeline::clear()
 {
-    for(map<int, SCML::Entity::Animation::Timeline::Key*>::const_iterator e = keys.begin(); e != keys.end(); e++)
+    SCML_BEGIN_MAP_FOREACH_CONST(keys, int, Key*, item)
     {
-        delete e->second;
+        delete item;
     }
+    SCML_END_MAP_FOREACH_CONST;
     keys.clear();
 }
 
@@ -2974,64 +3022,56 @@ void Entity::Animation::Timeline::Key::Object::clear()
 
 int Entity::getNumAnimations() const
 {
-    return animations.size();
+    return SCML_MAP_SIZE(animations);
 }
 
 Entity::Animation* Entity::getAnimation(int animation) const
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
-        return NULL;
-    
-    return a->second;
+    return SCML_MAP_FIND(animations, animation);
 }
 
 Entity::Animation::Mainline::Key* Entity::getKey(int animation, int key) const
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
-    if(k == a->second->mainline.keys.end())
-        return NULL;
-    
-    return k->second;
+    return SCML_MAP_FIND(a->mainline.keys, key);
 }
 
 
 Entity::Animation::Mainline::Key::Bone_Ref* Entity::getBoneRef(int animation, int key, int bone_ref) const
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
-    if(k == a->second->mainline.keys.end())
+    Animation::Mainline::Key* k = SCML_MAP_FIND(a->mainline.keys, key);
+    if(k == NULL)
         return NULL;
     
-    map<int, Animation::Mainline::Key::Bone_Container>::const_iterator b = k->second->bones.find(bone_ref);
-    if(b == k->second->bones.end() || !b->second.hasBone_Ref())
+    Animation::Mainline::Key::Bone_Container b = SCML_MAP_FIND(k->bones, bone_ref);
+    if(!b.hasBone_Ref())
         return NULL;
     
-    return b->second.bone_ref;
+    return b.bone_ref;
 }
 
 Entity::Animation::Mainline::Key::Object_Ref* Entity::getObjectRef(int animation, int key, int object_ref) const
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Mainline::Key*>::const_iterator k = a->second->mainline.keys.find(key);
-    if(k == a->second->mainline.keys.end())
+    Animation::Mainline::Key* k = SCML_MAP_FIND(a->mainline.keys, key);
+    if(k == NULL)
         return NULL;
     
-    map<int, Animation::Mainline::Key::Object_Container>::const_iterator c = k->second->objects.find(object_ref);
-    if(c == k->second->objects.end() || !c->second.hasObject_Ref())
+    Animation::Mainline::Key::Object_Container o = SCML_MAP_FIND(k->objects, object_ref);
+    if(!o.hasObject_Ref())
         return NULL;
     
-    return c->second.object_ref;
+    return o.object_ref;
 }
 
 // Gets the next key index according to the animation's looping setting.
@@ -3048,7 +3088,7 @@ int Entity::getNextKeyID(int animation, int lastKey) const
     if(animation_ptr->looping == "true")
     {
         // If we've reached the end of the keys, loop.
-        if(lastKey+1 >= int(animation_ptr->mainline.keys.size()))
+        if(lastKey+1 >= int(SCML_MAP_SIZE(animation_ptr->mainline.keys)))
             return animation_ptr->loop_to;
         else
             return lastKey+1;
@@ -3061,7 +3101,7 @@ int Entity::getNextKeyID(int animation, int lastKey) const
     else  // assume "false"
     {
         // If we've haven't reached the end of the keys, return the next one.
-        if(lastKey+1 < int(animation_ptr->mainline.keys.size()))
+        if(lastKey+1 < int(SCML_MAP_SIZE(animation_ptr->mainline.keys)))
             return lastKey+1;
         else // if we have reached the end, stick to this key
             return lastKey;
@@ -3071,60 +3111,50 @@ int Entity::getNextKeyID(int animation, int lastKey) const
 
 Entity::Animation::Timeline::Key* Entity::getTimelineKey(int animation, int timeline, int key)
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
+    Animation::Timeline* t = SCML_MAP_FIND(a->timelines, timeline);
+    if(t == NULL)
         return NULL;
     
-    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
-        return NULL;
-    
-    return k->second;
+    return SCML_MAP_FIND(t->keys, key);
 }
 
 
 Entity::Animation::Timeline::Key::Object* Entity::getTimelineObject(int animation, int timeline, int key)
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
+    Animation::Timeline* t = SCML_MAP_FIND(a->timelines, timeline);
+    if(t == NULL)
         return NULL;
     
-    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
+    Animation::Timeline::Key* k = SCML_MAP_FIND(t->keys, key);
+    if(k == NULL || !k->has_object)
         return NULL;
     
-    if(!k->second->has_object)
-        return NULL;
-    
-    return &k->second->object;
+    return &k->object;
 }
 
 Entity::Animation::Timeline::Key::Bone* Entity::getTimelineBone(int animation, int timeline, int key)
 {
-    map<int, Animation*>::const_iterator a = animations.find(animation);
-    if(a == animations.end())
+    Animation* a = SCML_MAP_FIND(animations, animation);
+    if(a == NULL)
         return NULL;
     
-    map<int, Animation::Timeline*>::const_iterator t = a->second->timelines.find(timeline);
-    if(t == a->second->timelines.end())
+    Animation::Timeline* t = SCML_MAP_FIND(a->timelines, timeline);
+    if(t == NULL)
         return NULL;
     
-    map<int, Animation::Timeline::Key*>::const_iterator k = t->second->keys.find(key);
-    if(k == t->second->keys.end())
+    Animation::Timeline::Key* k = SCML_MAP_FIND(t->keys, key);
+    if(k == NULL || k->has_object)
         return NULL;
     
-    if(k->second->has_object)
-        return NULL;
-    
-    return &k->second->bone;
+    return &k->bone;
 }
 
 

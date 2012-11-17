@@ -1,14 +1,11 @@
 #include "XML_Helpers.h"
-#include <vector>
-#include <stdexcept>
-using namespace std;
 
 
 
-std::string toLower(const std::string& str)
+SCML_STRING toLower(const SCML_STRING& str)
 {
-    std::string result = str;
-    for(unsigned int i = 0; i < result.size(); i++)
+    SCML_STRING result = str;
+    for(unsigned int i = 0; i < SCML_STRING_SIZE(result); i++)
     {
         result[i] = tolower(result[i]);
     }
@@ -16,33 +13,33 @@ std::string toLower(const std::string& str)
 }
 
 
-bool toBool(const std::string& str)
+bool toBool(const SCML_STRING& str)
 {
     if(toLower(str) == "true")
         return true;
     if(toLower(str) == "false")
         return false;
-    return atoi(str.c_str());
+    return atoi(SCML_TO_CSTRING(str));
 }
 
-int toInt(const std::string& str)
+int toInt(const SCML_STRING& str)
 {
-    return atoi(str.c_str());
+    return atoi(SCML_TO_CSTRING(str));
 }
 
-float toFloat(const std::string& str)
+float toFloat(const SCML_STRING& str)
 {
-    return atof(str.c_str());
+    return atof(SCML_TO_CSTRING(str));
 }
 
 
 
-std::string toString(bool b)
+SCML_STRING toString(bool b)
 {
     return (b? "true" : "false");
 }
 
-std::string toString(int n)
+SCML_STRING toString(int n)
 {
     char buf[20];
     sprintf(buf, "%d", n);
@@ -85,7 +82,7 @@ char* stripTrailingDecimalZeros(char* buf)
     return buf;
 }
 
-std::string toString(float f, int precision)
+SCML_STRING toString(float f, int precision)
 {
     char buf[20];
     if(precision >= 0)
@@ -109,83 +106,83 @@ std::string toString(float f, int precision)
 
 
 
-bool xmlAttrExists(TiXmlElement* elem, const string& attribute)
+bool xmlAttrExists(TiXmlElement* elem, const SCML_STRING& attribute)
 {
-    return (elem->Attribute(attribute.c_str()) != NULL);
+    return (elem->Attribute(SCML_TO_CSTRING(attribute)) != NULL);
 }
 
-string xmlGetStringAttr(TiXmlElement* elem, const string& attribute)
+SCML_STRING xmlGetStringAttr(TiXmlElement* elem, const SCML_STRING& attribute)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
     {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
+        printf("Failed to load attribute '%s' from '%s' element.\n", SCML_TO_CSTRING(attribute), elem->Value());
         return "";
     }
     return attr;
 }
 
-string xmlGetStringAttr(TiXmlElement* elem, const string& attribute, const string& defaultValue)
+SCML_STRING xmlGetStringAttr(TiXmlElement* elem, const SCML_STRING& attribute, const SCML_STRING& defaultValue)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
         return defaultValue;
     return attr;
 }
 
-bool xmlGetBoolAttr(TiXmlElement* elem, const string& attribute)
+bool xmlGetBoolAttr(TiXmlElement* elem, const SCML_STRING& attribute)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
     {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
+        printf("Failed to load attribute '%s' from '%s' element.\n", SCML_TO_CSTRING(attribute), elem->Value());
         return false;
     }
     return toBool(attr);
 }
 
-bool xmlGetBoolAttr(TiXmlElement* elem, const string& attribute, bool defaultValue)
+bool xmlGetBoolAttr(TiXmlElement* elem, const SCML_STRING& attribute, bool defaultValue)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
         return defaultValue;
     return toBool(attr);
 }
 
-int xmlGetIntAttr(TiXmlElement* elem, const string& attribute)
+int xmlGetIntAttr(TiXmlElement* elem, const SCML_STRING& attribute)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
     {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
+        printf("Failed to load attribute '%s' from '%s' element.\n", SCML_TO_CSTRING(attribute), elem->Value());
         return 0;
     }
     return toInt(attr);
 }
 
-int xmlGetIntAttr(TiXmlElement* elem, const string& attribute, int defaultValue)
+int xmlGetIntAttr(TiXmlElement* elem, const SCML_STRING& attribute, int defaultValue)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
         return defaultValue;
     return toInt(attr);
 }
 
-float xmlGetFloatAttr(TiXmlElement* elem, const string& attribute)
+float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
     {
-        printf("Failed to load attribute '%s' from '%s' element.\n", attribute.c_str(), elem->Value());
+        printf("Failed to load attribute '%s' from '%s' element.\n", SCML_TO_CSTRING(attribute), elem->Value());
         return 0.0f;
     }
     return toFloat(attr);
 }
 
 
-float xmlGetFloatAttr(TiXmlElement* elem, const string& attribute, float defaultValue)
+float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute, float defaultValue)
 {
-    const char* attr = elem->Attribute(attribute.c_str());
+    const char* attr = elem->Attribute(SCML_TO_CSTRING(attribute));
     if(attr == NULL)
         return defaultValue;
     return toFloat(attr);

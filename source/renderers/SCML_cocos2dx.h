@@ -3,7 +3,6 @@
 
 #include "cocos2d.h"
 #include "SCMLpp.h"
-#include <map>
 
 /*! \brief Namespace for Cocos2d-x renderer
 */
@@ -15,12 +14,12 @@ class FileSystem : public SCML::FileSystem
     public:
     
     // Folder, File
-    std::map<std::pair<int, int>, cocos2d::CCSprite*> images;
+    SCML_MAP(SCML_PAIR(int, int), cocos2d::CCSprite*) images;
     
     virtual ~FileSystem();
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     
     cocos2d::CCSprite* getImage(int folderID, int fileID) const;
     
@@ -38,7 +37,7 @@ class Entity : public cocos2d::CCNode, public SCML::Entity
     FileSystem* setFileSystem(FileSystem* fs);
     
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y);
 };
 

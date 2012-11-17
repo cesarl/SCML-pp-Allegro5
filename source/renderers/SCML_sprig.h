@@ -3,7 +3,6 @@
 
 #include "sprig.h"
 #include "SCMLpp.h"
-#include <map>
 
 /*! \brief Namespace for SPriG renderer
 */
@@ -15,12 +14,12 @@ class FileSystem : public SCML::FileSystem
     public:
     
     // Folder, File
-    std::map<std::pair<int, int>, SDL_Surface*> images;
+    SCML_MAP(SCML_PAIR(int, int), SDL_Surface*) images;
     
     virtual ~FileSystem();
     virtual bool loadImageFile(int folderID, int fileID, const std::string& filename);
     virtual void clear();
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     
     SDL_Surface* getImage(int folderID, int fileID) const;
     
@@ -40,7 +39,7 @@ class Entity : public SCML::Entity
     SDL_Surface* setScreen(SDL_Surface* scr);
     
     virtual void convert_to_SCML_coords(float& x, float& y, float& angle);
-    virtual std::pair<unsigned int, unsigned int> getImageDimensions(int folderID, int fileID) const;
+    virtual SCML_PAIR(unsigned int, unsigned int) getImageDimensions(int folderID, int fileID) const;
     virtual void draw_internal(int folderID, int fileID, float x, float y, float angle, float scale_x, float scale_y);
 };
 
