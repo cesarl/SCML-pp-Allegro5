@@ -2642,25 +2642,25 @@ void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
 
 
 
-Entity::Transform::Transform()
+Transform::Transform()
     : x(0.0f), y(0.0f), angle(0.0f), scale_x(1.0f), scale_y(1.0f)
 {}
 
-Entity::Transform::Transform(float x, float y, float angle, float scale_x, float scale_y)
+Transform::Transform(float x, float y, float angle, float scale_x, float scale_y)
     : x(x), y(y), angle(angle), scale_x(scale_x), scale_y(scale_y)
 {}
 
-bool Entity::Transform::operator==(const Transform& t) const
+bool Transform::operator==(const Transform& t) const
 {
     return (x == t.x && y == t.y && angle == t.angle && scale_x == t.scale_x && scale_y == t.scale_y);
 }
 
-bool Entity::Transform::operator!=(const Transform& t) const
+bool Transform::operator!=(const Transform& t) const
 {
     return !(*this == t);
 }
 
-void Entity::Transform::lerp(const Transform& transform, float t, int spin)
+void Transform::lerp(const Transform& transform, float t, int spin)
 {
     x = SCML::lerp(x, transform.x, t);
     y = SCML::lerp(y, transform.y, t);
@@ -2680,7 +2680,7 @@ void Entity::Transform::lerp(const Transform& transform, float t, int spin)
     scale_y = SCML::lerp(scale_y, transform.scale_y, t);
 }
 
-void Entity::Transform::apply_parent_transform(const Transform& parent)
+void Transform::apply_parent_transform(const Transform& parent)
 {
     x *= parent.scale_x;
     y *= parent.scale_y;

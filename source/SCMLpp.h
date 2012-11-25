@@ -782,6 +782,28 @@ public:
 };
 
 
+
+/*! \brief The coordinate transform for a bone or object.
+ */
+class Transform
+{
+    public:
+    
+    float x, y;
+    float angle;
+    float scale_x, scale_y;
+    
+    Transform();
+    Transform(float x, float y, float angle, float scale_x, float scale_y);
+    
+    bool operator==(const Transform& t) const;
+    bool operator!=(const Transform& t) const;
+    
+    void lerp(const Transform& transform, float t, int spin);
+    void apply_parent_transform(const Transform& parent);
+};
+
+
 /*! \brief A class to directly interface with SCML character data and draw it (to be inherited).
  *
  * Derived classes provide the means for the Entity to draw itself with a specific renderer.
@@ -799,24 +821,6 @@ public:
 
     /*! Time (in milliseconds) tracking the position of the animation from its beginning. */
     int time;
-    
-    class Transform
-    {
-        public:
-        
-        float x, y;
-        float angle;
-        float scale_x, scale_y;
-        
-        Transform();
-        Transform(float x, float y, float angle, float scale_x, float scale_y);
-        
-        bool operator==(const Transform& t) const;
-        bool operator!=(const Transform& t) const;
-        
-        void lerp(const Transform& transform, float t, int spin);
-        void apply_parent_transform(const Transform& parent);
-    };
     
     class Bone_Transform_State
     {
@@ -1251,6 +1255,8 @@ public:
     Animation::Timeline::Key* getTimelineKey(int animation, int timeline, int key);
     Animation::Timeline::Key::Object* getTimelineObject(int animation, int timeline, int key);
     Animation::Timeline::Key::Bone* getTimelineBone(int animation, int timeline, int key);
+    
+    
 };
 
 
