@@ -1,6 +1,7 @@
 #include "SCML_SDL_gpu.h"
 #include <vector>
 #include <list>
+#include <cmath>
 
 using namespace std;
 using namespace SCML_SDL_gpu;
@@ -34,6 +35,8 @@ void main_loop(vector<string>& data_files)
     float angle = 0.0f;
     float scale = 1.0f;
     bool flipped = false;
+    bool drawObjectPositions = false;
+    bool drawBones = false;
     
     bool paused = false;
     
@@ -96,6 +99,14 @@ void main_loop(vector<string>& data_files)
                 else if(event.key.keysym.sym == SDLK_BACKSPACE)
                 {
                     flipped = !flipped;
+                }
+                else if(event.key.keysym.sym == SDLK_o)
+                {
+                    drawObjectPositions = !drawObjectPositions;
+                }
+                else if(event.key.keysym.sym == SDLK_b)
+                {
+                    drawBones = !drawBones;
                 }
                 else if(event.key.keysym.sym == SDLK_RETURN)
                 {
@@ -166,6 +177,39 @@ void main_loop(vector<string>& data_files)
             (*e)->draw(x, y, angle, (flipped? -scale : scale), scale);
         }
         
+        if(drawBones)
+        {
+            for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+            {
+                int numBones = (*e)->getNumBones();
+                for(int i = 0; i < numBones; i++)
+                {
+                    SCML::Transform transform;
+                    if((*e)->getBoneTransform(transform, i))
+                    {
+                        SDL_Color blue = {0, 0, 255, 255};
+                        GPU_Line(screen, transform.x, transform.y, transform.x + 50*cos(transform.angle*M_PI/180), transform.y + 50*sin(transform.angle*M_PI/180), blue);
+                    }
+                }
+            }
+        }
+        
+        if(drawObjectPositions)
+        {
+            for(list<Entity*>::iterator e = entities.begin(); e != entities.end(); e++)
+            {
+                int numObjects = (*e)->getNumObjects();
+                for(int i = 0; i < numObjects; i++)
+                {
+                    SCML::Transform transform;
+                    if((*e)->getObjectTransform(transform, i))
+                    {
+                        SDL_Color red = {255, 0, 0, 255};
+                        GPU_CircleFilled(screen, transform.x, transform.y, 5*transform.scale_x*transform.scale_y, red);
+                    }
+                }
+            }
+        }
         
         GPU_Flip();
         SDL_Delay(10);

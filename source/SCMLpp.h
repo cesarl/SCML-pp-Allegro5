@@ -1256,7 +1256,14 @@ public:
     Animation::Timeline::Key::Object* getTimelineObject(int animation, int timeline, int key);
     Animation::Timeline::Key::Bone* getTimelineBone(int animation, int timeline, int key);
     
+    bool getSimpleObjectTransform(Transform& result, Animation::Mainline::Key::Object* obj1);
+    bool getTweenedObjectTransform(Transform& result, Animation::Mainline::Key::Object_Ref* ref1);
     
+    int getNumBones() const;
+    int getNumObjects() const;
+    
+    bool getBoneTransform(Transform& result, int boneID);
+    bool getObjectTransform(Transform& result, int objectID);
 };
 
 

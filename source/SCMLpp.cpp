@@ -3157,7 +3157,196 @@ Entity::Animation::Timeline::Key::Bone* Entity::getTimelineBone(int animation, i
     return &k->bone;
 }
 
+int Entity::getNumBones() const
+{
+    // Get key
+    Animation::Mainline::Key* key_ptr = getKey(animation, key);
+    if(key_ptr == NULL)
+        return 0;
+    
+    return SCML_MAP_SIZE(key_ptr->bones);
+}
 
+int Entity::getNumObjects() const
+{
+    // Get key
+    Animation::Mainline::Key* key_ptr = getKey(animation, key);
+    if(key_ptr == NULL)
+        return 0;
+    
+    return SCML_MAP_SIZE(key_ptr->objects);
+}
+
+bool Entity::getBoneTransform(Transform& result, int boneID)
+{
+    // Get key
+    Animation::Mainline::Key* key_ptr = getKey(animation, key);
+    if(key_ptr == NULL)
+        return false;
+    
+    // Find object
+    Animation::Mainline::Key::Bone_Container item = SCML_MAP_FIND(key_ptr->bones, boneID);
+    if(item.hasBone())
+    {
+        // Get bone transform
+        result = bone_transform_state.transforms[item.bone->id];
+        
+        // FIXME: Actually the inverse conversion...
+        convert_to_SCML_coords(result.x, result.y, result.angle);
+        return true;
+    }
+    else if(item.hasBone_Ref())
+    {
+        // Get bone transform
+        result = bone_transform_state.transforms[item.bone_ref->id];
+        
+        // FIXME: Actually the inverse conversion...
+        convert_to_SCML_coords(result.x, result.y, result.angle);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Entity::getObjectTransform(Transform& result, int objectID)
+{
+    // Get key
+    Animation::Mainline::Key* key_ptr = getKey(animation, key);
+    if(key_ptr == NULL)
+        return false;
+    
+    // Find object
+    Animation::Mainline::Key::Object_Container item = SCML_MAP_FIND(key_ptr->objects, objectID);
+    if(item.hasObject())
+    {
+        return getSimpleObjectTransform(result, item.object);
+    }
+    else if(item.hasObject_Ref())
+    {
+        return getTweenedObjectTransform(result, item.object_ref);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Entity::getSimpleObjectTransform(Transform& result, SCML::Entity::Animation::Mainline::Key::Object* obj1)
+{
+    if(obj1 == NULL)
+        return false;
+    
+    // Get parent bone transform
+    Transform parent_transform;
+    
+    if(obj1->parent < 0)
+        parent_transform = bone_transform_state.base_transform;
+    else
+        parent_transform = bone_transform_state.transforms[obj1->parent];
+    
+    
+    // Set object transform
+    Transform obj_transform(obj1->x, obj1->y, obj1->angle, obj1->scale_x, obj1->scale_y);
+    
+    // Transform the sprite by the parent transform.
+    obj_transform.apply_parent_transform(parent_transform);
+    
+    
+    // Transform the sprite by its own transform now.
+    
+    float pivot_x_ratio = obj1->pivot_x;
+    float pivot_y_ratio = obj1->pivot_y;
+    
+    // No image tweening
+    std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
+    
+    // Rotate about the pivot point and draw from the center of the image
+    float offset_x = (pivot_x_ratio - 0.5f)*SCML_PAIR_FIRST(img_dims);
+    float offset_y = (pivot_y_ratio - 0.5f)*SCML_PAIR_SECOND(img_dims);
+    float sprite_x = -offset_x*obj_transform.scale_x;
+    float sprite_y = -offset_y*obj_transform.scale_y;
+    
+    bool flipped = ((obj_transform.scale_x < 0) != (obj_transform.scale_y < 0));
+    rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y, flipped);
+    
+    // Save the result
+    result.x = sprite_x;
+    result.y = sprite_y;
+    result.angle = flipped? -obj_transform.angle : obj_transform.angle;
+    result.scale_x = obj_transform.scale_x;
+    result.scale_y = obj_transform.scale_y;
+    
+    // FIXME: Actually the inverse conversion...
+    convert_to_SCML_coords(result.x, result.y, result.angle);
+    return true;
+}
+
+bool Entity::getTweenedObjectTransform(Transform& result, SCML::Entity::Animation::Mainline::Key::Object_Ref* ref1)
+{
+    // Dereference object_ref and get the next one in the timeline for tweening
+    Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref1->timeline, ref1->key+1);
+    if(t_key2 == NULL)
+        t_key2 = t_key1;
+    if(t_key1 == NULL || !t_key1->has_object || !t_key2->has_object)
+        return false;
+    
+    Animation::Timeline::Key::Object* obj1 = &t_key1->object;
+    Animation::Timeline::Key::Object* obj2 = &t_key2->object;
+    if(obj2 == NULL)
+        obj2 = obj1;
+    if(obj1 == NULL)
+        return false;
+    
+    // Get interpolation (tweening) factor
+    float t = 0.0f;
+    if(t_key2->time != t_key1->time)
+        t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
+    
+    // Get parent bone transform
+    Transform parent_transform;
+    if(ref1->parent < 0)
+        parent_transform = bone_transform_state.base_transform;
+    else
+        parent_transform = bone_transform_state.transforms[ref1->parent];
+    
+    // Set object transform
+    Transform obj_transform(obj1->x, obj1->y, obj1->angle, obj1->scale_x, obj1->scale_y);
+    
+    // Tween with next key's object
+    obj_transform.lerp(Transform(obj2->x, obj2->y, obj2->angle, obj2->scale_x, obj2->scale_y), t, t_key1->spin);
+    
+    // Transform the sprite by the parent transform.
+    obj_transform.apply_parent_transform(parent_transform);
+    
+    
+    // Transform the sprite by its own transform now.
+    
+    float pivot_x_ratio = lerp(obj1->pivot_x, obj2->pivot_x, t);
+    float pivot_y_ratio = lerp(obj1->pivot_y, obj2->pivot_y, t);
+    
+    // No image tweening
+    std::pair<unsigned int, unsigned int> img_dims = getImageDimensions(obj1->folder, obj1->file);
+    
+    // Rotate about the pivot point and draw from the center of the image
+    float offset_x = (pivot_x_ratio - 0.5f)*SCML_PAIR_FIRST(img_dims);
+    float offset_y = (pivot_y_ratio - 0.5f)*SCML_PAIR_SECOND(img_dims);
+    float sprite_x = -offset_x*obj_transform.scale_x;
+    float sprite_y = -offset_y*obj_transform.scale_y;
+    
+    bool flipped = ((obj_transform.scale_x < 0) != (obj_transform.scale_y < 0));
+    rotate_point(sprite_x, sprite_y, obj_transform.angle, obj_transform.x, obj_transform.y, flipped);
+    
+    // Save the result
+    result.x = sprite_x;
+    result.y = sprite_y;
+    result.angle = flipped? -obj_transform.angle : obj_transform.angle;
+    result.scale_x = obj_transform.scale_x;
+    result.scale_y = obj_transform.scale_y;
+    
+    // FIXME: Actually the inverse conversion...
+    convert_to_SCML_coords(result.x, result.y, result.angle);
+    return true;
+}
 
 
 }
