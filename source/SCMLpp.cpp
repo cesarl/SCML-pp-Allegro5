@@ -892,7 +892,7 @@ bool Data::Entity::Animation::load(TiXmlElement* elem)
     id = xmlGetIntAttr(elem, "id", 0);
     name = xmlGetStringAttr(elem, "name", "");
     length = xmlGetIntAttr(elem, "length", 0);
-    looping = xmlGetStringAttr(elem, "looping", "");
+    looping = xmlGetStringAttr(elem, "looping", "true");
     loop_to = xmlGetIntAttr(elem, "loop_to", 0);
     
     TiXmlElement* meta_data_child = elem->FirstChildElement("meta_data");
