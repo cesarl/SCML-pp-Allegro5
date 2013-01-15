@@ -2514,6 +2514,9 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
     convert_to_SCML_coords(x, y, angle);
     
     int nextKeyID = getNextKeyID(animation, key);
+    Animation::Mainline::Key* nextkey_ptr = getKey(animation, nextKeyID);
+    if(nextkey_ptr == NULL)
+        nextkey_ptr = key_ptr;
     
     // Build up the bone transform hierarchy
     Transform base_transform(x, y, angle, scale_x, scale_y);
@@ -2532,7 +2535,8 @@ void Entity::draw(float x, float y, float angle, float scale_x, float scale_y)
         }
         else
         {
-            draw_tweened_object(item.object_ref);
+            Animation::Mainline::Key::Object_Container nextitem = SCML_MAP_FIND(nextkey_ptr->objects, _iter_e->first);  // FIXME: Breaks STL abstraction
+            draw_tweened_object(item.object_ref, nextitem.object_ref);
         }
     }
     SCML_END_MAP_FOREACH_CONST;
@@ -2579,11 +2583,16 @@ void Entity::draw_simple_object(Animation::Mainline::Key::Object* obj1)
 }
 
 
-void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
+void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1, Animation::Mainline::Key::Object_Ref* ref2)
 {
+    if(ref1 == NULL)
+        return;
+    if(ref2 == NULL)
+        ref2 = ref1;
     // Dereference object_ref and get the next one in the timeline for tweening
+    Animation* animation_ptr = getAnimation(animation);  // Need this only if looping...
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref1->timeline, ref1->key+1);
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
     if(t_key2 == NULL)
         t_key2 = t_key1;
     if(t_key1 == NULL || !t_key1->has_object || !t_key2->has_object)
@@ -2597,8 +2606,10 @@ void Entity::draw_tweened_object(Animation::Mainline::Key::Object_Ref* ref1)
     {
         // Get interpolation (tweening) factor
         float t = 0.0f;
-        if(t_key2->time != t_key1->time)
+        if(t_key2->time > t_key1->time)
             t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
+        else if(t_key2->time < t_key1->time)
+            t = (time - t_key1->time)/float(animation_ptr->length - t_key1->time);
         
         // Get parent bone transform
         Transform parent_transform;
@@ -2726,6 +2737,10 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
     SCML_VECTOR_CLEAR(transforms);
     
     Entity::Animation::Mainline::Key* key_ptr = entity_ptr->getKey(animation, key);
+    // FIXME: Check key_ptr == NULL here?
+    Entity::Animation::Mainline::Key* nextkey_ptr = entity_ptr->getKey(animation, nextKey);
+    if(nextkey_ptr == NULL)
+        nextkey_ptr = key_ptr;
     
     // Resize the transform vector according to the biggest bone index
     int max_index = -1;
@@ -2747,23 +2762,31 @@ void Entity::Bone_Transform_State::rebuild(int entity, int animation, int key, i
     
     SCML_VECTOR_RESIZE(transforms, max_index+1);
     
+    Entity::Animation* animation_ptr = entity_ptr->getAnimation(animation);
+    
     // Calculate and store the transforms
     SCML_BEGIN_MAP_FOREACH_CONST(key_ptr->bones, int, Animation::Mainline::Key::Bone_Container, item)
     {
         if(item.hasBone_Ref())
         {
+            Animation::Mainline::Key::Bone_Container nextitem = SCML_MAP_FIND(nextkey_ptr->bones, _iter_e->first);  // FIXME: Breaks STL abstraction
             Animation::Mainline::Key::Bone_Ref* ref1 = item.bone_ref;
+            Animation::Mainline::Key::Bone_Ref* ref2 = nextitem.bone_ref;
+            if(ref2 == NULL)
+                ref2 = ref1;
             
             // Dereference bone_refs
             Animation::Timeline::Key* b_key1 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key);
-            Animation::Timeline::Key* b_key2 = entity_ptr->getTimelineKey(animation, ref1->timeline, ref1->key+1);
+            Animation::Timeline::Key* b_key2 = entity_ptr->getTimelineKey(animation, ref2->timeline, ref2->key);
             if(b_key2 == NULL)
                 b_key2 = b_key1;
             if(b_key1 != NULL)
             {
                 float t = 0.0f;
-                if(b_key2->time != b_key1->time)
+                if(b_key2->time > b_key1->time)
                     t = (time - b_key1->time)/float(b_key2->time - b_key1->time);
+                else if(b_key2->time < b_key1->time)
+                    t = (time - b_key1->time)/float(animation_ptr->length - b_key1->time);
                 
                 Entity::Animation::Timeline::Key::Bone* bone1 = &b_key1->bone;
                 Entity::Animation::Timeline::Key::Bone* bone2 = &b_key2->bone;
@@ -3223,7 +3246,12 @@ bool Entity::getObjectTransform(Transform& result, int objectID)
     }
     else if(item.hasObject_Ref())
     {
-        return getTweenedObjectTransform(result, item.object_ref);
+        // Get the item to tween with
+        Animation::Mainline::Key* nextkey_ptr = getKey(animation, getNextKeyID(animation, key));
+        if(nextkey_ptr == NULL)
+            nextkey_ptr = key_ptr;
+        Animation::Mainline::Key::Object_Container nextitem = SCML_MAP_FIND(nextkey_ptr->objects, objectID);  // Assuming that objects and object_refs match.
+        return getTweenedObjectTransform(result, item.object_ref, nextitem.object_ref);
         return true;
     }
     else
@@ -3280,11 +3308,12 @@ bool Entity::getSimpleObjectTransform(Transform& result, SCML::Entity::Animation
     return true;
 }
 
-bool Entity::getTweenedObjectTransform(Transform& result, SCML::Entity::Animation::Mainline::Key::Object_Ref* ref1)
+bool Entity::getTweenedObjectTransform(Transform& result, SCML::Entity::Animation::Mainline::Key::Object_Ref* ref1, SCML::Entity::Animation::Mainline::Key::Object_Ref* ref2)
 {
     // Dereference object_ref and get the next one in the timeline for tweening
+    Animation* animation_ptr = getAnimation(animation);  // Only needed if looping...
     Animation::Timeline::Key* t_key1 = getTimelineKey(animation, ref1->timeline, ref1->key);
-    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref1->timeline, ref1->key+1);
+    Animation::Timeline::Key* t_key2 = getTimelineKey(animation, ref2->timeline, ref2->key);
     if(t_key2 == NULL)
         t_key2 = t_key1;
     if(t_key1 == NULL || !t_key1->has_object || !t_key2->has_object)
@@ -3299,8 +3328,10 @@ bool Entity::getTweenedObjectTransform(Transform& result, SCML::Entity::Animatio
     
     // Get interpolation (tweening) factor
     float t = 0.0f;
-    if(t_key2->time != t_key1->time)
+    if(t_key2->time > t_key1->time)
         t = (time - t_key1->time)/float(t_key2->time - t_key1->time);
+    else if(t_key2->time < t_key1->time)
+        t = (time - t_key1->time)/float(animation_ptr->length - t_key1->time);
     
     // Get parent bone transform
     Transform parent_transform;
