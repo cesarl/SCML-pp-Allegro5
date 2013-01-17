@@ -23,6 +23,8 @@ int xmlGetIntAttr(TiXmlElement* elem, const SCML_STRING& attribute, int default_
 float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute);
 float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute, float default_value);
 
-
+#ifdef _MSC_VER
+    #define snprintf c99_snprintf
+#endif
 
 #endif

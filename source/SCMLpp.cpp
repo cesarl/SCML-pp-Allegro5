@@ -2,12 +2,16 @@
 
 #include "XML_Helpers.h"
 #include "stdarg.h"
-#include "libgen.h"
 #include <climits>
+#define _USE_MATH_DEFINES
 #include <cmath>
 
+#ifndef _MSC_VER
+    #include "libgen.h"
+#endif
+
 #ifndef PATH_MAX
-#define PATH_MAX MAX_PATH
+    #define PATH_MAX MAX_PATH
 #endif
 
 namespace SCML
