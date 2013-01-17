@@ -17,6 +17,16 @@
 namespace SCML
 {
 
+// Visual Studio doesn't have dirname?
+#ifdef _MSC_VER
+    // FIXME: This breaks the STL abstraction
+    SCML_STRING dirname(SCML_STRING source)
+    {
+        source.erase(std::find(source.rbegin(), source.rend(), '/').base(), source.end());
+        return source;
+    }
+#endif
+
 static void log(const char* formatted_text, ...)
 {
     static char buffer[2000];
