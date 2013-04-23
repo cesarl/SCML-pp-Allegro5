@@ -8,6 +8,7 @@
 
 #ifndef _MSC_VER
     #include "libgen.h"
+    #include <algorithm>
 #endif
 
 #ifndef PATH_MAX
@@ -2507,8 +2508,8 @@ static void rotate_point(float& x, float& y, float angle, float origin_x, float 
     if(flipped)
         angle = -angle;
     
-    float s = sin(angle*M_PI/180);
-    float c = cos(angle*M_PI/180);
+    float s = sinf(angle*M_PI/180);
+    float c = cosf(angle*M_PI/180);
     float xnew = (x * c) - (y * s);
     float ynew = (x * s) + (y * c);
     xnew += origin_x;

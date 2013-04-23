@@ -25,6 +25,7 @@ float xmlGetFloatAttr(TiXmlElement* elem, const SCML_STRING& attribute, float de
 
 #ifdef _MSC_VER
     #define snprintf c99_snprintf
+    int c99_snprintf(char* str, size_t size, const char* format, ...);
 #endif
 
 #endif
