@@ -1,0 +1,280 @@
+# depslib dependency file v1.0
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/SCMLpp.cpp
+	"SCMLpp.h"
+	"XML_Helpers.h"
+	"stdarg.h"
+	<climits>
+	<cmath>
+	"libgen.h"
+	<algorithm>
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/SCMLpp.h
+	<string>
+	<map>
+	<vector>
+	"tinyxml.h"
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinyxml.h
+	<ctype.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<assert.h>
+	<string>
+	<iostream>
+	<sstream>
+	"tinystr.h"
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinystr.h
+	<assert.h>
+	<string.h>
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/libraries/XML_Helpers.h
+	"SCMLpp.h"
+	"tinyxml.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/libraries/XML_Helpers.cpp
+	"XML_Helpers.h"
+	"libgen.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinystr.cpp
+	"tinystr.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinyxml.cpp
+	<ctype.h>
+	<sstream>
+	<iostream>
+	"tinyxml.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinyxmlerror.cpp
+	"tinyxml.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/libraries/tinyxmlparser.cpp
+	<ctype.h>
+	<stddef.h>
+	"tinyxml.h"
+	<windows.h>
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/main.cpp
+	"main.h"
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/main.h
+	"SCMLpp.h"
+	<vector>
+	<string>
+
+1370530902 source:/home/cesarlc/Dropbox/documents/test/svn/source/renderers/Allegro5_main.cpp
+	"SCML_Allegro5.h"
+	<allegro5/allegro.h>
+	<allegro5/allegro_image.h>
+	<vector>
+	<list>
+
+1370527841 /home/cesarlc/Dropbox/documents/test/svn/source/renderers/SCML_Allegro5.h
+	<allegro5/allegro.h>
+	<allegro5/allegro_image.h>
+	"SCMLpp.h"
+
+1370530804 source:/home/cesarlc/Dropbox/documents/test/svn/source/renderers/SCML_Allegro5.cpp
+	"SCML_Allegro5.h"
+	<cmath>
+	<cstdlib>
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/renderers/SCML_SDL_gpu.cpp
+	"SCML_SDL_gpu.h"
+	<cstdlib>
+	<cmath>
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/source/renderers/SCML_SDL_gpu.h
+	"SDL_gpu.h"
+	"SCMLpp.h"
+
+1370524616 /home/cesarlc/Dropbox/documents/test/svn/externals/include/SDL_gpu.h
+	"SDL.h"
+
+1327665706 /usr/include/SDL/SDL.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_config.h
+	"SDL_platform.h"
+	<stdarg.h>
+
+1327665706 /usr/include/SDL/SDL_platform.h
+
+1327665706 /usr/include/SDL/begin_code.h
+
+1327665706 /usr/include/SDL/close_code.h
+
+1327665706 /usr/include/SDL/SDL_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_keysym.h
+
+1327665706 /usr/include/SDL/SDL_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1327665706 /usr/include/SDL/SDL_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1327665706 /usr/include/SDL/SDL_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1370524616 source:/home/cesarlc/Dropbox/documents/test/svn/source/renderers/SDL_gpu_main.cpp
+	"SCML_SDL_gpu.h"
+	<vector>
+	<list>
+	<cmath>
+
